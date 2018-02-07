@@ -3,14 +3,15 @@ Created on Feb 18, 2010
 
 Altered Feb 20, 2014
 '''
-from myServerSend import general_failure, end_session_success,create_success, delete_success,deposit_success,withdraw_success,balance_success
+
+from myServerSend import *
 from struct import unpack
 import sys
 
 #create new account
 def create_request(conn,netBuffer,myData,lock):
 
-    values = unpack('!II',netBuffer[6:14])
+    values = unpack('!100p',netBuffer[6:14])
 
     lock.acquire()
     try:

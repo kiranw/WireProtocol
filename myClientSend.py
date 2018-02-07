@@ -34,7 +34,7 @@ def create_request(conn):
             act = -1
             break
 
-    send_message('\x01' + pack('!I',100) + '\x10' + pack('!100s',act),conn)
+    send_message('\x01' + pack('!I',100) + '\x10' + pack('!100p',act),conn)
     
     return
 
@@ -69,7 +69,7 @@ def login_request(conn):
             act = netBuffer
             break
         
-    send_message('\x01' + pack('!I',100) + '\x30' + pack('!100s',act),conn)
+    send_message('\x01' + pack('!I',100) + '\x30' + pack('!100p',act),conn)
     return
 
 
@@ -115,7 +115,7 @@ def send_message_request(conn):
             msg = netBuffer
             break
 
-    send_message('\x01' + pack('!I',400) + '\x50' + pack('!100s300s',dest_act,msg),conn)
+    send_message('\x01' + pack('!I',400) + '\x50' + pack('!100p300p',dest_act,msg),conn)
     return
 
 

@@ -81,14 +81,26 @@ def handler(conn,lock, myData):
 
 if __name__ == '__main__':
     # Data structure for storing account information
-    myData = dict()
+    accounts = []
 
-    #setup socket
+    # A list of messages is associated with a username
+    messages = {}
+
+    # Active accounts, maps addresses to accounts 
+    active_accounts = {}
+
+    myData = {
+    'accounts': accounts,
+    'messages': messages,
+    'active_accounts': active_accounts
+    }
+
+    # Setup socket
     mySocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
     mySocket.bind(('',8080))
     mySocket.listen(5)  #param represents the number of queued connections
 
-    #listening for connections
+    # Listening for connections
     while True:
         #This is the simple way to start this; we could also do a SELECT
         conn, address = mySocket.accept()
