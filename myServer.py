@@ -7,6 +7,9 @@ Restructured and re-factored by Jim Waldo, 2/17/2014
 '''
 
 import socket
+import logging
+import struct
+from logging.config import dictConfig
 import myServerReceive
 import myServerSend
 from myServerSend import unknown_opcode
@@ -23,11 +26,24 @@ opcodes = {'\x10': myServerReceive.create_request,        # Create account <user
            '\x60': myServerReceive.collect_messages,      # Collect messages, only if logged in
            }
 
+logging_config = dict(
+    version=1,
+    formatters={
+        'f': {'format':
+              '%(asctime)s %(name)-12s %(levelname)-8s %(message)s'}
+        },
+    handlers={
+        'h': {'class': 'logging.StreamHandler',
+              'formatter': 'f',
+              'level': logging.DEBUG}
+        },
+    root={
+        'handlers': ['h'],
+        'level': logging.DEBUG,
+        },
+)
 
-def recordConnect(log, addr):
-    print('Opened connection with ' + addr)
-    log.write('Opened connection with ' + addr + '\n')
-    log.flush()
+dictConfig(logging_config)
 
 #thread for handling clients
 def handler(conn,lock, myData):
@@ -64,9 +80,7 @@ def handler(conn,lock, myData):
 
 
 if __name__ == '__main__':
-    #set up log
-    log = open('log.txt', 'a')
-    #data structure for storing account information
+    # Data structure for storing account information
     myData = dict()
 
     #setup socket
@@ -78,10 +92,7 @@ if __name__ == '__main__':
     while True:
         #This is the simple way to start this; we could also do a SELECT
         conn, address = mySocket.accept()
-        #log connection
-        recordConnect(log, str(address))
+        logging.getLogger().info('Opened connection with %s ', address)
         #start a new thread
         lock = thread.allocate_lock()
         thread.start_new_thread(handler, (conn, lock, myData))
-
-    log.close()
