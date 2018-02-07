@@ -10,46 +10,48 @@ from sys import exit
 def general_failure(conn, netBuffer):
     values = unpack('!h',netBuffer[6:8])
     strlen = values[0]
-    print "\nERROR: " + netBuffer[8:8+strlen]
+    print("\nERROR: " + netBuffer[8:8+strlen])
     return
 
-#create new account
+# Create a new account. Users are automatically logged in once they create an account.
 def create_success(conn, netBuffer):
-    values = unpack('!I',netBuffer[6:10])
-    print "Account creation successful " + str(values[0])
+    print("Account creation successful - you are currently logged in.")
     return
 
-#delete an existing account
+# Delete an existing account.
 def delete_success(conn, netBuffer):
-    print "Account deletion successful"
+    print("Account deletion successful")
     return
 
-#deposit to an existing account
-def deposit_success(conn,netBuffer):
-    values = unpack('!I',netBuffer[6:10])
-    print "Deposit success. The updated balance: " + str(values[0])
+# Log in to an account that already exists.
+def login_success(conn,netBuffer):
+    print("Login success! You are logged in.")
     return
 
-#withdraw from an existing account
-def withdraw_success(conn,netBuffer):
-    values = unpack('!I',netBuffer[6:10])
-    print "Withdrawal success. The updated balance: " + str(values[0])
-    return
-
-#withdraw from an existing account
-def balance_success(conn,netBuffer):
-    values = unpack('!I',netBuffer[6:10])
-    print "The balance of that account is: " + str(values[0])
-    return
-
-#end a session
-def end_session_success(conn,netBuffer):
-    print "SHUTTING DOWN"
+# Logout of an account that is currently logged in.
+def logout_success(conn,netBuffer):
+    print("Logout success! You are logged out. Disconnecting from server.")
     conn.close()
     exit()
     return
 
-#handle invalid opcodes
+# Send a message to a particular user.
+def send_message_success(conn,netBuffer):
+    print("Messages sent successfully! Your messages were received by the server.")
+    return
+
+# Receive undelivered messages to the account that is logged in.
+def collect_messages_success(conn,netBuffer):
+    # TODO - needs to be figured out for what is returned here
+    values = unpack('!h',netBuffer[6:8])
+    strlen = values[0]
+    for i in range(strlen):
+        print("Message " + i)
+        print("Received from " + i)
+        print("message: " + i)
+    return
+
+# Handle invalid opcodes.
 def unknown_opcode(conn):
-    print "ERROR: INCORRECT OPCODE"
+    print("ERROR: INCORRECT OPCODE")
     return
