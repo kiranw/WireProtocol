@@ -13,13 +13,14 @@ from myServerSend import unknown_opcode
 import thread
 
 version = '\x01'
-#opcode associations
-opcodes = {'\x10': myServerReceive.create_request, 
-           '\x20': myServerReceive.delete_request,
-           '\x30': myServerReceive.deposit_request,
-           '\x40': myServerReceive.withdraw_request,
-           '\x50': myServerReceive.balance_request,
-           '\x60': myServerReceive.end_session
+
+# Opcodes to be sent by client
+opcodes = {'\x10': myServerReceive.create_request,        # Create account <username>
+           '\x20': myServerReceive.delete_request,        # Delete, only if logged in
+           '\x30': myServerReceive.login_request,         # Login <username>, only if user exists
+           '\x40': myServerReceive.logout_request,        # Logout, only if logged in
+           '\x50': myServerReceive.send_message_request,  # Send message <dest_username> <message>
+           '\x60': myServerReceive.collect_messages,      # Collect messages, only if logged in
            }
 
 
