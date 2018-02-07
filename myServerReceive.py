@@ -108,20 +108,16 @@ def login_request(conn,netBuffer,myData,lock,address):
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
 def logout_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!100p',netBuffer[6:106])
     lock.acquire()
     try:
-        if values[0]:
-            act = values[0].decode('ascii')
+        # See if this user is not logged in to anything
+        if address not in myData['active_accounts']:
+            general_failure(conn, 'logout',"User is already logged out.")
+            return
 
-            # See if this user is not logged in to anything
-            if address not in myData['active_accounts']:
-                general_failure(conn, 'logout',"User is already logged out.")
-                return
-
-            # Mark user as active
-            myData['active_accounts'].remove(address)
-            logout_success(conn)
+        # Mark user as active
+        del myData['active_accounts'][address]
+        logout_success(conn)
     finally:
         lock.release()
         print(myData)
@@ -137,7 +133,7 @@ def logout_request(conn,netBuffer,myData,lock,address):
 # dest_act - destination account
 # msg - message content
 def send_message_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!400p',netBuffer[6:106])
+    values = unpack('!400p',netBuffer[6:507])
     dest_act = values[0].decode('ascii')
     msg = values[1].decode('ascii')
 
