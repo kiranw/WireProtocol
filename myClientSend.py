@@ -103,7 +103,7 @@ def send_message_request(conn):
         if(len(msg) < 300):
             break
 
-    send_message(b'\x01' + pack('!I',400) + b'\x50' + pack('!100p300p',dest_act,msg),conn)
+    send_message(b'\x01' + pack('!I',400) + b'\x50' + pack('!100p',bytes(dest_act,'ascii')) + pack('!300p' bytes(msg, 'ascii')),conn)
     return
 
 
