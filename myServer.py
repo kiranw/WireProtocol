@@ -10,7 +10,7 @@ import socket
 import myServerReceive
 import myServerSend
 from myServerSend import unknown_opcode
-import thread
+import _thread as thread
 
 version = '\x01'
 
