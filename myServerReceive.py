@@ -185,5 +185,14 @@ def end_session(conn,netBuffer,myData,lock):
     conn.close()
     return
 
+def login_request():
+    pass
 
+def logout_request():
+    pass
 
+def send_message_request():
+    pass
+
+def collect_messages():
+    pass
