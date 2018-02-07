@@ -1,7 +1,10 @@
 '''
+CS 262: Distributed Systems
 Created on Feb 18, 2010
+Altered Feb. 20, 2014
+------------------------------
 
-Altered Feb 20, 2014
+Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 from myServerSend import *
@@ -13,13 +16,16 @@ import sys
 # A user can only create an account if they are not logged in
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
-def create_request(conn,netBuffer,myData,lock):
+def create_request(conn,netBuffer,myData,lock,address):
 
     values = unpack('!100p',netBuffer[6:])
 
     lock.acquire()
     try:
-        #get account number
+        if address in myData['active_accounts']:
+            general_failure(conn,'create',"User is currently logged in. Cannot create a new account.")
+            return
+
         if values[0]:
             act = values[0].decode('ascii')
             if act in myData['accounts']:
@@ -27,6 +33,7 @@ def create_request(conn,netBuffer,myData,lock):
                 return
 
         myData['accounts'].append(act)
+        myData['active_accounts'][address] = act
         print("Added account, " + act)
         create_success(conn)
     finally:
@@ -38,20 +45,19 @@ def create_request(conn,netBuffer,myData,lock):
 # A user will be logged out and the account deleted if this request
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
-def delete_request(conn,netBuffer,myData,lock):
+def delete_request(conn,netBuffer,myData,lock,address):
     # values = unpack('!I',netBuffer[6:10])
-
-    # Get the associated username with the current account
-    # act = 
 
     lock.acquire()
     try:
-        #get balance
-        # if (logged out):
+        # Check if the current user is logged in
+        if address not in myData['active_accounts']:
             general_failure(conn,'delete',"User is not logged in; Cannot delete account")
             return
 
+        act = myData['active_accounts'][address]
         myData['accounts'].remove(act)
+        myData['active_accounts'].remove(address)
         delete_success(conn)
     finally:
         lock.release()
@@ -66,7 +72,7 @@ def delete_request(conn,netBuffer,myData,lock):
 # 
 # Arguments sent to server:
 # act - account name
-def login_request(conn,netBuffer,myData,lock):
+def login_request(conn,netBuffer,myData,lock,address):
     values = unpack('!100p',netBuffer[6:])
     lock.acquire()
     try:
@@ -74,9 +80,9 @@ def login_request(conn,netBuffer,myData,lock):
             act = values[0].decode('ascii')
 
             # See if this user is logged in already
-            # if :
-                # general_failure(conn, 'login',"User is already logged in.")
-                # return
+            if address in myData['active_accounts']:
+                general_failure(conn,'login',"User is currently logged in to an account. Cannot login.")
+                return
 
             # See if account name exists
             if act not in myData['accounts']:
@@ -89,10 +95,7 @@ def login_request(conn,netBuffer,myData,lock):
                 return
 
             # Mark user as active
-            myData['active_accounts'].append(act)
-            # Mark thread as active
-            # TODO
-
+            myData['active_accounts'][address] = act
             login_success(conn)
     finally:
         lock.release()
@@ -104,7 +107,7 @@ def login_request(conn,netBuffer,myData,lock):
 # On success, the user will be logged out (logout_success, \x41)
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
-def logout_request(conn,netBuffer,myData,lock):
+def logout_request(conn,netBuffer,myData,lock,address):
     values = unpack('!100p',netBuffer[6:])
     lock.acquire()
     try:
@@ -112,15 +115,12 @@ def logout_request(conn,netBuffer,myData,lock):
             act = values[0].decode('ascii')
 
             # See if this user is not logged in to anything
-            # if :
-                # general_failure(conn, 'logout',"User is already logged out.")
-                # return
+            if address not in myData['active_accounts']:
+                general_failure(conn, 'logout',"User is already logged out.")
+                return
 
             # Mark user as active
-            myData['active_accounts'].remove(act)
-            # Mark thread as inactive user
-            # TODO
-
+            myData['active_accounts'].remove(address)
             logout_success(conn)
     finally:
         lock.release()
@@ -136,7 +136,7 @@ def logout_request(conn,netBuffer,myData,lock):
 # Arguments sent to server:
 # dest_act - destination account
 # msg - message content
-def send_message_request(conn,netBuffer,myData,lock):
+def send_message_request(conn,netBuffer,myData,lock,address):
     values = unpack('!400p',netBuffer[6:])
     dest_act = values[0].decode('ascii')
     msg = values[1].decode('ascii')
@@ -154,7 +154,8 @@ def send_message_request(conn,netBuffer,myData,lock):
         if dest_act in myData['active_accounts'].values():
             dest_address = dict((active_act, active_address) for active_address, active_account in myData['active_accounts'].iteritems())[dest_act]
             # That line is temporary, we should have to regenerate this each time
-            # TODO send messages to active user, identify what thread that user is on
+            # TODO send messages to active user, identify what thread that user is on (does each message get a from: field?)
+            # Do threads need to poll some sort of list of pending messages to see if they should deliver?
             active_dest = True
             pass
 
@@ -173,21 +174,20 @@ def send_message_request(conn,netBuffer,myData,lock):
 # Collect undelivered messages
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
-def collect_messages(conn,netBuffer,myData,lock):
+def collect_messages(conn,netBuffer,myData,lock,address):
     lock.acquire()
     try:
-        # Get the current thread's active account
-        # act = 
+        if address not in myData['active_accounts']:
+            general_failure(conn,'collect_messages',"Current user is not logged in to an account.")
+            return
 
-        # if current account is not logged in, error
-        # general_failure(conn,'collect_messages',"Current user is not logged in to an account.")
-
+        # Get the account name that is logged in at current address
+        act = myData['active_accounts'][address]
         messages = []
+
         if act in myData['messages']:
             messages = myData['messages'][act]
-
         collect_messages_success(conn,messages)
-
     finally:
         lock.release()
         print(myData)

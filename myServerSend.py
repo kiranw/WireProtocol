@@ -1,14 +1,19 @@
 '''
+CS 262: Distributed Systems
 Created on Feb 18, 2010
+Altered Feb. 20, 2014
+------------------------------
 
-Altered Feb 20, 2014
+Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 from struct import pack
 
+
+# General failure is a method used to send any failure message, tagged with a typebyte associated with a particular operation
 def general_failure(conn, type, reason):
     
-    #find the appropriate opcode to send for particular errors
+    # Find the appropriate opcode to send for particular errors
     if type == 'create':
         typebyte = b'\x12'
     elif type == 'delete':
@@ -22,33 +27,42 @@ def general_failure(conn, type, reason):
     elif type == 'receive_messages':
         typebyte = b'\x62'
     
-    #encode and send the string
+    # Encode and send the string
     utf = reason.encode('utf-8')
     utflen = len(utf)
     conn.send(b'\x01' + pack('!I',2 + utflen) + typebyte + pack('!h',utflen) + utf)
     return
 
-#create new account
+
+# Create new account success
+# The account is created and the client is logged in to that account
 def create_success(conn):
-    # conn.send('\x01' + pack('!I',4) +'\x11' + pack('!100p',act))
     conn.send(b'\x01\x00\x00\x00\x00\x11')
     return
 
-#delete an existing account
+
+# Delete an existing account success
+# The client will be logged out of the account, and account deleted
 def delete_success(conn):
     conn.send(b'\x01\x00\x00\x00\x00\x21')
     return
 
+
+# Login success
+# The client is logged in
 def login_success(conn):
     conn.send(b'\x01\x00\x00\x00\x00\x31')
-    # conn.send(b'\x01' + pack('!I',4) + b'\x31' + pack('!I',bal))
     return
 
+# Logout success
+# The client is logged out
 def logout_success(conn):
     conn.send(b'\x01\x00\x00\x00\x00\x41')
-    # conn.send(b'\x01' + pack('!I',4) + b'\x41' + pack('!I',bal))
     return
 
+
+# Send message success
+# Returns whether the messages were undelivered and stored or delivered immediately
 def send_message_success(conn,received):
     # If received is true, the destination user was active
     # Else, the user's messages are collected in the server
@@ -56,13 +70,15 @@ def send_message_success(conn,received):
     conn.send(b'\x01' + pack('!I',30) + b'\x51' + pack('!30p',received))
     return
 
+# Collect message success
+# Returns a list of messages that were previously undelivered
 def collect_messages_success(conn, messages):
     # What happens in the case of partial failure to send a message?
     for message in messages:
         conn.send(b'\x01' + pack('!I',300) + b'\x61' + pack('!300p',message))
     return
 
-#handle invalid opcodes
+# Handle invalid opcodes
 def unknown_opcode(conn):
     conn.send(b'\x01\x00\x00\x00\x00\x72')
     return

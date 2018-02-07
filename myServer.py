@@ -1,9 +1,9 @@
 '''
 CS 262: Distributed Systems
-
 Created on Feb 18, 2010
-
+------------------------------
 Restructured and re-factored by Jim Waldo, 2/17/2014
+Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 import socket
@@ -18,7 +18,6 @@ import sys
 
 
 # TODO
-# Identify which users are logged in, and which addresses they correspond to
 # Think about design of the collect messages function
 # How are we sending messages (p?)
 
@@ -53,7 +52,7 @@ logging_config = dict(
 dictConfig(logging_config)
 
 #thread for handling clients
-def handler(conn,lock, myData):
+def handler(conn,lock, myData, address):
     logging.getLogger().info('Handler being invoked')
     #keep track of erroneous opcodes
     second_attempt = 0
@@ -79,7 +78,7 @@ def handler(conn,lock, myData):
                 #try to send packet to correct handler
                 try:
                     logging.getLogger().info('Received request with opcode %s ', opcode)
-                    opcodes[opcode](conn,netbuffer,myData,lock)
+                    opcodes[opcode](conn,netbuffer,myData,lock,address)
                 #catch unhandled opcodes
                 except KeyError:
                     if(second_attempt):
@@ -122,7 +121,7 @@ if __name__ == '__main__':
             logging.getLogger().info('Opened connection with %s ', address)
             #start a new thread
             lock = thread.allocate_lock()
-            thread.start_new_thread(handler, (conn, lock, myData))
+            thread.start_new_thread(handler, (conn, lock, myData, address))
         except KeyboardInterrupt:
             mySocket.close()
 
