@@ -45,7 +45,7 @@ def create_request(conn):
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn):
     print("DELETING YOUR ACCOUNT \n")    
-    send_message('\x01\x00\x00\x00\x00\x20',conn)
+    send_message(b'\x01\x00\x00\x00\x00\x20',conn)
     return
 
 
@@ -57,19 +57,17 @@ def delete_request(conn):
 # Arguments sent to server:
 # act - account name
 def login_request(conn):
+    maxLength = 100
     print("LOGGING YOU IN \n")
     print("Enter your username:")
     while True:
-        try:
-            netBuffer = int(input('>> '))
-        except ValueError:
-            continue
+        act = input()
         
-        if(netBuffer > 0 and netBuffer <= 100):
-            act = netBuffer
-            break
-        
-    send_message('\x01' + pack('!I',100) + '\x30' + pack('!100p',act),conn)
+        if(len(act) < maxLength):
+            # send_message(b'\x01\x00\x00\x00\x00\x10', conn)
+            send_message(b'\x01' + pack('!I',maxLength) + b'\x30' + pack('!'+str(maxLength)+'p', bytes(act, 'ascii')),conn)
+            print("Sent message")
+            return
     return
 
 
@@ -79,7 +77,7 @@ def login_request(conn):
 # their previous state (general_failure, \x42)
 def logout_request(conn):
     print("LOGGING YOU OUT \n")        
-    send_message('\x01\x00\x00\x00\x00\x40',conn)
+    send_message(b'\x01\x00\x00\x00\x00\x40',conn)
     return
 
 
@@ -95,27 +93,17 @@ def send_message_request(conn):
     print("SEND A MESSAGE TO ANOTHER USER \n")
     print("Enter the destination account name:")
     while True:
-        try:
-            netBuffer = int(input('>> '))
-        except ValueError:
-            continue
-        
-        if(netBuffer > 0 and netBuffer <= 100):
-            dest_act = netBuffer
+        dest_act = input('>> ')
+        if (len(dest_act) < 100):
             break
 
     print("Enter your message:")
     while True:
-        try:
-            netBuffer = int(input('>> '))
-        except ValueError:
-            continue
-        
-        if(netBuffer > 0 and netBuffer <= 100):
-            msg = netBuffer
+        msg = input('>> ')
+        if(len(msg) < 300):
             break
 
-    send_message('\x01' + pack('!I',400) + '\x50' + pack('!100p300p',dest_act,msg),conn)
+    send_message(b'\x01' + pack('!I',400) + b'\x50' + pack('!100p300p',dest_act,msg),conn)
     return
 
 
@@ -123,7 +111,7 @@ def send_message_request(conn):
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
 def collect_messages_request(conn):
-    send_message('\x01\x00\x00\x00\x00\x60',conn)
+    send_message(b'\x01\x00\x00\x00\x00\x60',conn)
     return
 
 
@@ -136,12 +124,11 @@ def collect_messages_request(conn):
 # conn - A connection to the server
 # On failure (if the connection is down) the client closes
 def send_message(message, conn):
-    conn.send(message)
-    print("Sent message to server") 
-    # try:
-        
-    # except:
-    #         #close the client if the connection is down
-    #         print("ERROR: connection down")
-    #         exit()
+    try:
+        conn.send(message)
+        print("Sent message to server") 
+    except:
+        #close the client if the connection is down
+        print("ERROR: connection down")
+        exit()
     return

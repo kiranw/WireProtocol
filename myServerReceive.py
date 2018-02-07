@@ -17,8 +17,8 @@ import sys
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
 def create_request(conn,netBuffer,myData,lock,address):
-
-    values = unpack('!100p',netBuffer[6:])
+    print(len(netBuffer))
+    values = unpack('!100p',netBuffer[6:107])
 
     lock.acquire()
     try:
@@ -57,7 +57,7 @@ def delete_request(conn,netBuffer,myData,lock,address):
 
         act = myData['active_accounts'][address]
         myData['accounts'].remove(act)
-        myData['active_accounts'].remove(address)
+        del myData['active_accounts'][address]
         delete_success(conn)
     finally:
         lock.release()
@@ -73,7 +73,7 @@ def delete_request(conn,netBuffer,myData,lock,address):
 # Arguments sent to server:
 # act - account name
 def login_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!100p',netBuffer[6:])
+    values = unpack('!100p',netBuffer[6:106])
     lock.acquire()
     try:
         if values[0]:
@@ -108,7 +108,7 @@ def login_request(conn,netBuffer,myData,lock,address):
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
 def logout_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!100p',netBuffer[6:])
+    values = unpack('!100p',netBuffer[6:106])
     lock.acquire()
     try:
         if values[0]:
@@ -137,7 +137,7 @@ def logout_request(conn,netBuffer,myData,lock,address):
 # dest_act - destination account
 # msg - message content
 def send_message_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!400p',netBuffer[6:])
+    values = unpack('!400p',netBuffer[6:106])
     dest_act = values[0].decode('ascii')
     msg = values[1].decode('ascii')
 

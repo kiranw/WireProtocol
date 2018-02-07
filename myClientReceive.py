@@ -46,8 +46,6 @@ def login_success(conn,netBuffer):
 # On success, the user will be logged out (logout_success, \x41)
 def logout_success(conn,netBuffer):
     print("Logout success! You are logged out. Disconnecting from server.")
-    conn.close()
-    exit()
     return
 
 
