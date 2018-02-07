@@ -149,10 +149,13 @@ def send_message_request(conn,netBuffer,myData,lock):
 
     # Handle the message
     try:
+        active_dest = False
+
         if dest_act in myData['active_accounts'].values():
             dest_address = dict((active_act, active_address) for active_address, active_account in myData['active_accounts'].iteritems())[dest_act]
             # That line is temporary, we should have to regenerate this each time
             # TODO send messages to active user, identify what thread that user is on
+            active_dest = True
             pass
 
         else:
@@ -160,7 +163,7 @@ def send_message_request(conn,netBuffer,myData,lock):
                 myData['messages'][dest_act] = []
             myData['messages'][dest_act].append(msg)
         
-        send_message_success(conn)
+        send_message_success(conn, active_dest)
     finally:
         lock.release()
         print(myData)
@@ -182,8 +185,6 @@ def collect_messages(conn,netBuffer,myData,lock):
         messages = []
         if act in myData['messages']:
             messages = myData['messages'][act]
-            # TODO send messages to active user, identify what thread that user is on
-            pass
 
         collect_messages_success(conn,messages)
 
