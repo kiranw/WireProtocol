@@ -1,7 +1,8 @@
 '''
 Created on Feb 18, 2010
-
 Altered Feb. 20, 2014
+
+Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 import socket
