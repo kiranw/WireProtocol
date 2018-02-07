@@ -8,192 +8,186 @@ from myServerSend import *
 from struct import unpack
 import sys
 
-#create new account
+# Create a new account
+# A valid new account must not exist
+# A user can only create an account if they are not logged in
+# Once an account is created, the client will be logged in
+# act - the account name provided by the user
 def create_request(conn,netBuffer,myData,lock):
 
-    values = unpack('!100p',netBuffer[6:14])
+    values = unpack('!100p',netBuffer[6:])
 
     lock.acquire()
     try:
-        #get balance
-        if(values[0] >= 0 and values[0] < sys.maxint):
-            bal = values[0]
-        else:
-            general_failure(conn, 'create', "invalid balance")
-            return
-
         #get account number
-        if values[1] > 0 and values[1] <= 100:
-            act = values[1]
-            if act in myData:
-                general_failure(conn, 'create',"account already in use")
+        if values[0]:
+            act = values[0].decode('ascii')
+            if act in myData['accounts']:
+                general_failure(conn,'create',"Account already in use; select a different username")
                 return
 
-        #generate a value if it was -1
-        elif values[1] == -1:
-            i = 1
-            while i in myData:
-                i+=1
-                if i == 101:
-                    general_failure(conn, 'create',"no remaining accounts")
-                    return
-            act = i
-        else:
-            general_failure(conn, 'create',"invalid account number")
-            return
-
-        myData[act] = bal
-        create_success(conn,act)
+        myData['accounts'].append(act)
+        print("Added account, " + act)
+        create_success(conn)
     finally:
         lock.release()
         print(myData)
-
     return
 
-#delete an existing account
+# Delete the account that is currently logged in
+# A user will be logged out and the account deleted if this request
+# is successful (delete_success, \x21)
+# On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn,netBuffer,myData,lock):
-    values = unpack('!I',netBuffer[6:10])
+    # values = unpack('!I',netBuffer[6:10])
+
+    # Get the associated username with the current account
+    # act = 
 
     lock.acquire()
     try:
         #get balance
-        if(values[0] >= 0 and values[0] <= 100):
-            act = values[0]
-        else:
-            general_failure(conn,'delete',"invalid account number")
+        # if (logged out):
+            general_failure(conn,'delete',"User is not logged in; Cannot delete account")
             return
 
-        if act not in myData:
-            general_failure(conn,'delete',"nonexistent account number")
-            return
-
-        if myData[act] != 0:
-            general_failure(conn,'delete',"nonzero money in that account")
-            return
-
-        del myData[act]
+        myData['accounts'].remove(act)
         delete_success(conn)
     finally:
         lock.release()
         print(myData)
-
     return
 
-#deposit to an existing account
-def deposit_request(conn,netBuffer,myData,lock):
-    values = unpack('!II',netBuffer[6:14])
+
+# Login to an existing account
+# A user will submit a username
+# On success, the user will be logged in (login_success, \x31)
+# on failure, the user will remain logged out (general_failure, \x32)
+# 
+# Arguments sent to server:
+# act - account name
+def login_request(conn,netBuffer,myData,lock):
+    values = unpack('!100p',netBuffer[6:])
     lock.acquire()
     try:
-        #get account number
-        if(values[0] >= 0 and values[0] <= 100):
-            act = values[0]
-        else:
-            general_failure(conn,'deposit',"invalid account number")
-            return
+        if values[0]:
+            act = values[0].decode('ascii')
 
-        #check for existence of account
-        if act not in myData:
-            general_failure(conn,'deposit',"nonexistent account number")
-            return
+            # See if this user is logged in already
+            # if :
+                # general_failure(conn, 'login',"User is already logged in.")
+                # return
 
-        #check for a valid deposit amount
-        if values[1] > 0:
-            bal = values[1]
-        else:
-            general_failure(conn,'deposit',"nonsense deposit amount")
-            return
+            # See if account name exists
+            if act not in myData['accounts']:
+                general_failure(conn,'login',"Account does not exist. Cannot login.")
+                return
 
-        curr_bal = myData[act]
+            # See if account is already logged in
+            if act in myData['active_accounts']:
+                general_failure(conn,'login',"Account is already logged in to another user.")
+                return
 
-        #check that the new balance won't overflow
-        if bal < sys.maxint - curr_bal - 1:
-            myData[act] = curr_bal + bal
-        else:
-            general_failure(conn,'deposit',"account overflow... damn you are rich")
-            return
-        deposit_success(conn, curr_bal + bal)
-    finally:
-        lock.release()
-        print(myData)
+            # Mark user as active
+            myData['active_accounts'].append(act)
+            # Mark thread as active
+            # TODO
 
-
-    return
-
-#withdraw from an existing account
-def withdraw_request(conn,netBuffer,myData,lock):
-    values = unpack('!II',netBuffer[6:14])
-    lock.acquire()
-    try:
-        #get account number
-        if(values[0] >= 0 and values[0] <= 100):
-            act = values[0]
-        else:
-            general_failure(conn,'withdraw',"invalid account number")
-            return
-
-        #check for existence of account
-        if act not in myData:
-            general_failure(conn,'withdraw',"nonexistent account number")
-            return
-
-        #check for a valid deposit amount
-        if values[1] > 0:
-            bal = values[1]
-        else:
-            general_failure(conn,'withdraw',"nonsense withdrawal amount")
-            return
-
-        curr_bal = myData[act]
-
-        #check that the new balance won't overflow
-        if curr_bal - bal >= 0:
-            myData[act] = curr_bal - bal
-        else:
-            general_failure(conn,'withdraw',"not enough money in account")
-            return
-        withdraw_success(conn, curr_bal - bal)
+            login_success(conn)
     finally:
         lock.release()
         print(myData)
     return
 
-#withdraw from an existing account
-def balance_request(conn,netBuffer,myData,lock):
-    #no need to lock: we are just reading a value from a dict, which is thread-safe
-    values = unpack('!I',netBuffer[6:10])
 
-    #get balance
-    if(values[0] >= 0 and values[0] <= 100):
-        act = values[0]
-    else:
-        general_failure(conn,'balance',"invalid account number")
-        return
-
-    #get the current balance
+# Logout of an account that is currently logged in
+# On success, the user will be logged out (logout_success, \x41)
+# on failure, the user will remain logged in, or logged out if that was
+# their previous state (general_failure, \x42)
+def logout_request(conn,netBuffer,myData,lock):
+    values = unpack('!100p',netBuffer[6:])
+    lock.acquire()
     try:
-        bal = myData[act]
-    except KeyError:
-        general_failure(conn,'balance',"nonexistent account")
+        if values[0]:
+            act = values[0].decode('ascii')
+
+            # See if this user is not logged in to anything
+            # if :
+                # general_failure(conn, 'logout',"User is already logged out.")
+                # return
+
+            # Mark user as active
+            myData['active_accounts'].remove(act)
+            # Mark thread as inactive user
+            # TODO
+
+            logout_success(conn)
+    finally:
+        lock.release()
+        print(myData)
+    return
+
+
+# Send a message to an existing account
+# On success, the server receives the message from the user (send_message_success, \x51)
+# This does not mean the destination account has received the message
+# On failure, the message is not received by the server (general_failure, \x52)
+# 
+# Arguments sent to server:
+# dest_act - destination account
+# msg - message content
+def send_message_request(conn,netBuffer,myData,lock):
+    values = unpack('!400p',netBuffer[6:])
+    dest_act = values[0].decode('ascii')
+    msg = values[1].decode('ascii')
+
+    lock.acquire()
+    # Check if destination account is valid
+    if dest_act not in myData['accounts']:
+        general_failure(conn,'send_message',"Destination account does not exist.")
         return
 
-    balance_success(conn,bal)
+    # Handle the message
+    try:
+        if dest_act in myData['active_accounts'].values():
+            dest_address = dict((active_act, active_address) for active_address, active_account in myData['active_accounts'].iteritems())[dest_act]
+            # That line is temporary, we should have to regenerate this each time
+            # TODO send messages to active user, identify what thread that user is on
+            pass
 
+        else:
+            if dest_act not in myData['messages']:
+                myData['messages'][dest_act] = []
+            myData['messages'][dest_act].append(msg)
+        
+        send_message_success(conn)
+    finally:
+        lock.release()
+        print(myData)
     return
 
-#end a session
-def end_session(conn,netBuffer,myData,lock):
-    end_session_success(conn)
-    conn.close()
+
+# Collect undelivered messages
+# On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
+# On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
+def collect_messages(conn,netBuffer,myData,lock):
+    lock.acquire()
+    try:
+        # Get the current thread's active account
+        # act = 
+
+        # if current account is not logged in, error
+        # general_failure(conn,'collect_messages',"Current user is not logged in to an account.")
+
+        messages = []
+        if act in myData['messages']:
+            messages = myData['messages'][act]
+            # TODO send messages to active user, identify what thread that user is on
+            pass
+
+        collect_messages_success(conn,messages)
+
+    finally:
+        lock.release()
+        print(myData)
     return
-
-def login_request():
-    pass
-
-def logout_request():
-    pass
-
-def send_message_request():
-    pass
-
-def collect_messages():
-    pass

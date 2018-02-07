@@ -4,7 +4,7 @@ altered on Feb. 20, 2014
 '''
 
 from struct import pack
-from sys import maxint, exit
+# from sys import maxint, exit
 
 
 
@@ -19,24 +19,22 @@ from sys import maxint, exit
 # Arguments sent to server:
 # act - account name
 def create_request(conn):
+    maxLength = 100
+
     print("CREATING AN ACCOUNT \n")
     print("Enter a username less than 100 characters:")
-    while True:
-        try:
-            netBuffer = int(raw_input('>> '))
-        except ValueError:
-            continue
-        
-        if(netBuffer > 0 and netBuffer <= 100):
-            act = netBuffer
-            break
-        elif(netBuffer == 0):
-            act = -1
-            break
 
-    send_message('\x01' + pack('!I',100) + '\x10' + pack('!100p',act),conn)
-    
-    return
+    act = ""
+    while True:
+        act = input()
+        
+        if(len(act) < maxLength):
+            # send_message(b'\x01\x00\x00\x00\x00\x10', conn)
+            send_message(b'\x01' + pack('!I',maxLength) + b'\x10' + pack('!'+str(maxLength)+'p',bytes(act, 'ascii')),conn)
+            print("Sent message")
+            return
+        else:
+            print("Exceeded length of username, must be less than 100 characters")
 
 
 # Delete the account that is currently logged in
@@ -61,7 +59,7 @@ def login_request(conn):
     print("Enter your username:")
     while True:
         try:
-            netBuffer = int(raw_input('>> '))
+            netBuffer = int(input('>> '))
         except ValueError:
             continue
         
@@ -96,7 +94,7 @@ def send_message_request(conn):
     print("Enter the destination account name:")
     while True:
         try:
-            netBuffer = int(raw_input('>> '))
+            netBuffer = int(input('>> '))
         except ValueError:
             continue
         
@@ -107,7 +105,7 @@ def send_message_request(conn):
     print("Enter your message:")
     while True:
         try:
-            netBuffer = int(raw_input('>> '))
+            netBuffer = int(input('>> '))
         except ValueError:
             continue
         
@@ -136,10 +134,12 @@ def collect_messages_request(conn):
 # conn - A connection to the server
 # On failure (if the connection is down) the client closes
 def send_message(message, conn):
-    try:
-        conn.send(message)
-    except:
-            #close the client if the connection is down
-            print("ERROR: connection down")
-            exit()
+    conn.send(message)
+    print("Sent message to server") 
+    # try:
+        
+    # except:
+    #         #close the client if the connection is down
+    #         print("ERROR: connection down")
+    #         exit()
     return

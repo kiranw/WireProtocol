@@ -1,8 +1,10 @@
 '''
 Created on Feb 18, 2010
-
 Altered Feb. 20, 2014
+
+Adapted by Mali and Kiran for Assignment 1, CS262
 '''
+
 from struct import unpack
 from sys import exit
 
@@ -11,7 +13,7 @@ from sys import exit
 def general_failure(conn, netBuffer):
     values = unpack('!h',netBuffer[6:8])
     strlen = values[0]
-    print("\nERROR: " + netBuffer[8:8+strlen])
+    print("\nERROR: " + netBuffer[8:8+strlen].decode('ascii'))
     return
 
 

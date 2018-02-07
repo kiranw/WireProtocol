@@ -8,11 +8,11 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 import socket
 import myClientSend
 from myClientReceive import *
-from myServerSend import *
+#from myServerSend import *
 import sys
 from struct import unpack
 
-version = '\x01'
+version = b'\x01'
 
 
 # Opcode associations received by the Server
@@ -30,22 +30,22 @@ version = '\x01'
 # x62 - general_failure
 # x63 - unknown_opcode
 
-opcodes = {'\x11': create_success,
-           '\x12': general_failure,  
-           '\x21': delete_success,
-           '\x22': general_failure,
-           '\x31': login_success,
-           '\x32': general_failure,
-           '\x41': logout_success,
-           '\x42': general_failure,
-           '\x51': send_message_success,
-           '\x52': general_failure,
-           '\x61': collect_messages_success,
-           '\x62': general_failure,
-           '\x63': unknown_opcode
+opcodes = {b'\x11': create_success,
+           b'\x12': general_failure,  
+           b'\x21': delete_success,
+           b'\x22': general_failure,
+           b'\x31': login_success,
+           b'\x32': general_failure,
+           b'\x41': logout_success,
+           b'\x42': general_failure,
+           b'\x51': send_message_success,
+           b'\x52': general_failure,
+           b'\x61': collect_messages_success,
+           b'\x62': general_failure,
+           b'\x63': unknown_opcode
            }
 
-def getInput():
+def getInput(mySocket):
     print('''
 CONNECTED TO MESSAGE SERVER - type the number of a function:
     (1) Create Account
@@ -55,7 +55,7 @@ CONNECTED TO MESSAGE SERVER - type the number of a function:
     (5) Send a Message
     (6) Collect Undelivered Messages
     ''')
-    netBuffer = raw_input('>> ')
+    netBuffer = input('>> ')
     return netBuffer
 
 def processInput(netBuffer):
@@ -85,7 +85,7 @@ def processInput(netBuffer):
         
     return
         
-def getResponse():
+def getResponse(mySocket):
     #wait for server responses...
     while True:
         try:
@@ -98,9 +98,11 @@ def getResponse():
         if len(retBuffer) != 0:
             
             header = unpack('!cIc',retBuffer[0:6])
+            print(header)
             #only allow correct version numbers
             if header[0] == version:
                 opcode = header[2]
+                print("opcode: " + str(opcode))
                 #send packet to correct handler
                 try:
                     opcodes[opcode](mySocket,retBuffer)
@@ -115,20 +117,20 @@ if __name__ == '__main__':
         print("ERROR: Usage 'python myClient.py <host> <port>'")
         sys.exit()
         
-        #get the address of the server
-        myHost = sys.argv[1]
-        myPort = sys.argv[2]
-        mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            mySocket.connect ( ( myHost, int(myPort)) )
-        except:
-            print("ERROR: could not connect to " + myHost + ":" + myPort)
-            sys.exit()
+    #get the address of the server
+    myHost = sys.argv[1]
+    myPort = sys.argv[2]
+    mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        mySocket.connect ( ( myHost, int(myPort)) )
+    except:
+        print("ERROR: could not connect to " + myHost + ":" + myPort)
+        sys.exit()
 
     while True:
-        netBuffer = getInput()
+        netBuffer = getInput(mySocket)
         #menu selection and function priming
         processInput(netBuffer)
-        getResponse()
+        getResponse(mySocket)
 
     mySocket.close()
