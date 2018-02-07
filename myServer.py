@@ -32,7 +32,7 @@ def recordConnect(log, addr):
 def handler(conn,lock, myData):
     #keep track of erroneous opcodes
     second_attempt = 0
-    while True:   
+    while True:
         #retrieve header
         try:
             netbuffer = conn.recv( 1024 )
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         #This is the simple way to start this; we could also do a SELECT
         conn, address = mySocket.accept()
         #log connection
-        recordConnect(log, str(address)) 
+        recordConnect(log, str(address))
         #start a new thread
         lock = thread.allocate_lock()
         thread.start_new_thread(handler, (conn, lock, myData))
