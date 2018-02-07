@@ -22,11 +22,12 @@ opcodes = {'\x10': myServerReceive.create_request,
            '\x60': myServerReceive.end_session
            }
 
+
 def recordConnect(log, addr):
-    print 'Opened connection with ' + addr
+    print('Opened connection with ' + addr)
     log.write('Opened connection with ' + addr + '\n')
     log.flush()
-    
+
 #thread for handling clients
 def handler(conn,lock, myData):
     #keep track of erroneous opcodes

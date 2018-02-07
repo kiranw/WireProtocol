@@ -40,19 +40,19 @@ def create_request(conn,netBuffer,myData,lock):
         else:
             general_failure(conn, 'create',"invalid account number")
             return
-            
+
         myData[act] = bal
         create_success(conn,act)
     finally:
         lock.release()
-        print myData
-    
+        print(myData)
+
     return
 
 #delete an existing account
 def delete_request(conn,netBuffer,myData,lock):
     values = unpack('!I',netBuffer[6:10])
-    
+
     lock.acquire()
     try:
         #get balance
@@ -74,8 +74,8 @@ def delete_request(conn,netBuffer,myData,lock):
         delete_success(conn)
     finally:
         lock.release()
-        print myData
-    
+        print(myData)
+
     return
 
 #deposit to an existing account
@@ -113,9 +113,9 @@ def deposit_request(conn,netBuffer,myData,lock):
         deposit_success(conn, curr_bal + bal)
     finally:
         lock.release()
-        print myData
-    
-    
+        print(myData)
+
+
     return
 
 #withdraw from an existing account
@@ -153,7 +153,7 @@ def withdraw_request(conn,netBuffer,myData,lock):
         withdraw_success(conn, curr_bal - bal)
     finally:
         lock.release()
-        print myData 
+        print(myData)
     return
 
 #withdraw from an existing account
