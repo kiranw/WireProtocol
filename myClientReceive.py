@@ -54,7 +54,10 @@ def logout_success(conn,netBuffer):
 # This does not mean the destination account has received the message 
 # (if the destination user is not logged in when the message is received by the server)
 def send_message_success(conn,netBuffer):
-    print("Messages sent successfully! Your messages were received by the server.")
+    # print("Messages sent successfully! Your messages were received by the server.")
+    values = unpack('!h',netBuffer[6:8])
+    strlen = values[0]
+    print("\nMessages sent successfully: " + netBuffer[8:8+strlen].decode('ascii'))
     return
 
 

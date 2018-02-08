@@ -67,7 +67,13 @@ def send_message_success(conn,received):
     # If received is true, the destination user was active
     # Else, the user's messages are collected in the server
     # received is a boolean - do we want to send it as such? is it worth even notifying the client of this?
-    conn.send(b'\x01' + pack('!I',30) + b'\x51' + pack('!30p',received))
+    msg = 'Destination user is not online; messages will be delivered later'
+    if received:
+        msg = 'Destination user is online; messages delivered'
+
+    utf = msg.encode('utf-8')
+    utflen = len(utf)
+    conn.send(b'\x01' + pack('!I',2 + utflen) + b'\x51' + pack('!h',utflen) + utf)
     return
 
 # Collect message success

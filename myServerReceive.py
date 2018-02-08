@@ -133,9 +133,10 @@ def logout_request(conn,netBuffer,myData,lock,address):
 # dest_act - destination account
 # msg - message content
 def send_message_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!400p',netBuffer[6:507])
-    dest_act = values[0].decode('ascii')
-    msg = values[1].decode('ascii')
+    print(netBuffer)
+    (dest_act,msg) = unpack('!100p255p',netBuffer[6:362])
+    dest_act = dest_act.decode('ascii')
+    msg = msg.decode('ascii')
 
     lock.acquire()
     # Check if destination account is valid

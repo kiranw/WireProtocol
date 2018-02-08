@@ -20,6 +20,7 @@ import sys
 # TODO
 # Think about design of the collect messages function
 # How are we sending messages (p?)
+# When connection is closed on client side, that is not reported to the server
 
 version = b'\x01'
 

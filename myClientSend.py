@@ -100,10 +100,10 @@ def send_message_request(conn):
     print("Enter your message:")
     while True:
         msg = input('>> ')
-        if(len(msg) < 300):
+        if(len(msg) < 255):
             break
 
-    send_message(b'\x01' + pack('!I',400) + b'\x50' + pack('!100p',bytes(dest_act,'ascii')) + pack('!300p' bytes(msg, 'ascii')),conn)
+    send_message(b'\x01' + pack('!I',355) + b'\x50' + pack('!100p',bytes(dest_act,'ascii')) + pack('!255p',bytes(msg,'ascii')),conn)
     return
 
 
