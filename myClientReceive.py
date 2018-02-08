@@ -68,11 +68,8 @@ def collect_messages_success(conn,netBuffer):
     # TODO - needs to be figured out for what is returned here
     values = unpack('!h',netBuffer[6:8])
     strlen = values[0]
-    for i in range(strlen):
-        print("Message " + i)
-        print("Received from " + i)
-        print("message: " + i)
-        print("\n")
+    print("You received a message!")
+    print(netBuffer[8:8+strlen].decode('ascii'))
     return
 
 # Handle invalid opcodes received from the server.

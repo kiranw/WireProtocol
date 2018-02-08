@@ -34,6 +34,7 @@ def create_request(conn,netBuffer,myData,lock,address):
 
         myData['accounts'].append(act)
         myData['active_accounts'][address] = act
+        myData['connections'][address] = conn
         print("Added account, " + act)
         create_success(conn)
     finally:
@@ -58,6 +59,7 @@ def delete_request(conn,netBuffer,myData,lock,address):
         act = myData['active_accounts'][address]
         myData['accounts'].remove(act)
         del myData['active_accounts'][address]
+        del myData['connections'][address]
         delete_success(conn)
     finally:
         lock.release()
@@ -96,6 +98,7 @@ def login_request(conn,netBuffer,myData,lock,address):
 
             # Mark user as active
             myData['active_accounts'][address] = act
+            myData['connections'][address] = conn
             login_success(conn)
     finally:
         lock.release()
@@ -115,8 +118,9 @@ def logout_request(conn,netBuffer,myData,lock,address):
             general_failure(conn, 'logout',"User is already logged out.")
             return
 
-        # Mark user as active
+        # Mark user as inactive
         del myData['active_accounts'][address]
+        del myData['connections'][address]
         logout_success(conn)
     finally:
         lock.release()
@@ -149,12 +153,13 @@ def send_message_request(conn,netBuffer,myData,lock,address):
         active_dest = False
 
         if dest_act in myData['active_accounts'].values():
-            dest_address = dict((active_act, active_address) for active_address, active_account in myData['active_accounts'].iteritems())[dest_act]
-            # That line is temporary, we should have to regenerate this each time
+            # That line is temporary, we should have to regenerate this each time       
+            dest_address = dict((active_act, active_address) for active_address, active_act in myData['active_accounts'].items())[dest_act]
             # TODO send messages to active user, identify what thread that user is on (does each message get a from: field?)
             # Do threads need to poll some sort of list of pending messages to see if they should deliver?
+            dest_conn = myData['connections'][dest_address]
             active_dest = True
-            pass
+            collect_messages_success(dest_conn, [msg])
 
         else:
             if dest_act not in myData['messages']:

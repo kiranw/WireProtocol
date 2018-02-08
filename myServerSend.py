@@ -81,7 +81,10 @@ def send_message_success(conn,received):
 def collect_messages_success(conn, messages):
     # What happens in the case of partial failure to send a message?
     for message in messages:
-        conn.send(b'\x01' + pack('!I',300) + b'\x61' + pack('!300p',message))
+        utf = message.encode('utf-8')
+        utflen = len(utf)
+        conn.send(b'\x01' + pack('!I',2 + utflen) + b'\x61' + pack('!h',utflen) + utf)
+        # conn.send(b'\x01' + pack('!I',300) + b'\x61' + pack('!300p',message))
     return
 
 # Handle invalid opcodes

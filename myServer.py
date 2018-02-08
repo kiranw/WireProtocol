@@ -19,7 +19,6 @@ import sys
 
 # TODO
 # Think about design of the collect messages function
-# How are we sending messages (p?)
 # When connection is closed on client side, that is not reported to the server
 
 version = b'\x01'
@@ -60,22 +59,21 @@ def handler(conn,lock, myData, address):
     while True:
         #retrieve header
         try:
+            print("trying")
             netbuffer = conn.recv( 1024 )
         except:
             #close the thread if the connection is down
             thread.exit()
         #if we receive a message...
         if len(netbuffer) >= 6:
-            logging.getLogger().info('Netbuffer is at least 6 chars')
+            # logging.getLogger().info('Netbuffer is at least 6 chars')
             #unpack it...
             header = struct.unpack('!cIc', netbuffer[0:6])
-            logging.getLogger().info(header)
-            logging.getLogger().info(len(netbuffer))
-            logging.getLogger().info(len(netbuffer) == (header[1] + 6))
+            # logging.getLogger().info(header)
             #only allow correct version numbers and buffers that are of the appropriate length
             if header[0] == version and len(netbuffer) == header[1] + 6:
                 opcode = header[2]
-                logging.getLogger().info(opcode)
+                # logging.getLogger().info(opcode)
                 #try to send packet to correct handler
                 try:
                     logging.getLogger().info('Received request with opcode %s ', opcode)
@@ -103,10 +101,14 @@ if __name__ == '__main__':
     # Active accounts, maps addresses to accounts 
     active_accounts = {}
 
+    # Connections, maps addresses to connections
+    connections = {}
+
     myData = {
     'accounts': accounts,
     'messages': messages,
-    'active_accounts': active_accounts
+    'active_accounts': active_accounts,
+    'connections': connections
     }
 
     # Setup socket
