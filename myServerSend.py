@@ -86,7 +86,6 @@ def collect_messages_success(conn, messages):
         utf = message.encode('utf-8')
         utflen = len(utf)
         conn.send(b'\x01' + pack('!I',2 + utflen) + b'\x61' + pack('!h',utflen) + utf)
-        # conn.send(b'\x01' + pack('!I',300) + b'\x61' + pack('!300p',message))
     return
 
 # Handle invalid opcodes

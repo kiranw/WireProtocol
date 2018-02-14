@@ -13,7 +13,7 @@ from myClientReceive import *
 #from myServerSend import *
 import sys
 from struct import unpack
-from threading import Thread 
+import threading
 
 version = b'\x01'
 
@@ -86,7 +86,6 @@ def processInput(netBuffer):
     #collect undelivered messages 
     elif netBuffer == str(6):
         myClientSend.collect_messages_request(mySocket)
-        
     return
         
 def getResponse(mySocket):
@@ -105,7 +104,7 @@ def getResponse(mySocket):
             #only allow correct version numbers
             if header[0] == version:
                 opcode = header[2]
-                
+
                 #send packet to correct handler
                 try:
                     opcodes[opcode](mySocket,retBuffer)
@@ -113,6 +112,10 @@ def getResponse(mySocket):
                     break
             break
         return
+
+class listenerThread(threading.Thread):
+   def run (self, socket):
+        getResponse(socket)
     
 if __name__ == '__main__':
     if(len(sys.argv) != 3):
@@ -125,13 +128,14 @@ if __name__ == '__main__':
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         mySocket.connect ( ( myHost, int(myPort)) )
+        # listenerThread(mySocket).start()
     except:
         print("ERROR: could not connect to " + myHost + ":" + myPort)
         sys.exit()
 
     while True:
         netBuffer = getInput(mySocket)
-
+        # getResponse(mySocket)
         #menu selection and function priming
         processInput(netBuffer)
         getResponse(mySocket)

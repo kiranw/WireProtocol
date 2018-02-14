@@ -126,6 +126,6 @@ def send_message(message, conn):
         conn.send(message)
     except:
         #close the client if the connection is down
-        print('\x1b[6;30;42m' + "ERROR: connection down" + '\x1b[0m' + "\n")
+        print('\x1b[6;30;42m' + "ERROR: Oh no! It looks like the connection is down. Try again some other time!" + '\x1b[0m' + "\n")
         exit()
     return
