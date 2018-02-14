@@ -143,6 +143,12 @@ def send_message_request(conn,netBuffer,myData,lock,address):
     msg = msg.decode('ascii')
 
     lock.acquire()
+
+    # Check if the user is logged in first 
+    if address not in myData['active_accounts']:
+        general_failure(conn, 'send_message',"User must be logged in to send a message.")
+        return
+
     # Check if destination account is valid
     if dest_act not in myData['accounts']:
         general_failure(conn,'send_message',"Destination account does not exist.")
@@ -189,6 +195,7 @@ def collect_messages(conn,netBuffer,myData,lock,address):
 
         if act in myData['messages']:
             messages = myData['messages'][act]
+            del myData['messages'][act]
         collect_messages_success(conn,messages)
     finally:
         lock.release()

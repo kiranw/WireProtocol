@@ -31,7 +31,7 @@ def create_success(conn, netBuffer):
 # A user will be logged out and the account deleted if this request
 # is successful (delete_success, \x21)
 def delete_success(conn, netBuffer):
-    print("Account deletion successful")
+    print("Account deletion successful.")
     return
 
 
@@ -70,6 +70,11 @@ def collect_messages_success(conn,netBuffer):
     strlen = values[0]
     print("You received a message!")
     print(netBuffer[8:8+strlen].decode('ascii'))
+    return
+
+
+def no_new_messages(conn, netBuffer):
+    print("You have no new messages.")
     return
 
 # Handle invalid opcodes received from the server.

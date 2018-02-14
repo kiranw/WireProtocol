@@ -13,6 +13,7 @@ from myClientReceive import *
 #from myServerSend import *
 import sys
 from struct import unpack
+from threading import Thread 
 
 version = b'\x01'
 
@@ -44,7 +45,8 @@ opcodes = {b'\x11': create_success,
            b'\x52': general_failure,
            b'\x61': collect_messages_success,
            b'\x62': general_failure,
-           b'\x63': unknown_opcode
+           b'\x71': unknown_opcode,
+           b'\x72': no_new_messages
            }
 
 def getInput(mySocket):
@@ -97,20 +99,18 @@ def getResponse(mySocket):
             print("ERROR: connection down")
             sys.exit()
             
-        if len(retBuffer) != 0:
-            
+        if len(retBuffer) != 0:            
             header = unpack('!cIc',retBuffer[0:6])
-            print(header)
+
             #only allow correct version numbers
             if header[0] == version:
                 opcode = header[2]
-                print("opcode: " + str(opcode))
+                
                 #send packet to correct handler
                 try:
                     opcodes[opcode](mySocket,retBuffer)
                 except KeyError:
                     break
-            #mySocket.send ('\x01\x01\x02\x03\x53\x10\x12\x34')
             break
         return
     
@@ -131,8 +131,13 @@ if __name__ == '__main__':
 
     while True:
         netBuffer = getInput(mySocket)
+
         #menu selection and function priming
         processInput(netBuffer)
         getResponse(mySocket)
 
     mySocket.close()
+
+
+
+

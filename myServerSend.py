@@ -24,7 +24,7 @@ def general_failure(conn, type, reason):
         typebyte = b'\x42'
     elif type == 'send_message':
         typebyte = b'\x52'
-    elif type == 'receive_messages':
+    elif type == 'collect_messages':
         typebyte = b'\x62'
     
     # Encode and send the string
@@ -80,6 +80,8 @@ def send_message_success(conn,received):
 # Returns a list of messages that were previously undelivered
 def collect_messages_success(conn, messages):
     # What happens in the case of partial failure to send a message?
+    if len(messages) == 0:
+        conn.send(b'\x01\x00\x00\x00\x00\x72')
     for message in messages:
         utf = message.encode('utf-8')
         utflen = len(utf)
@@ -89,7 +91,7 @@ def collect_messages_success(conn, messages):
 
 # Handle invalid opcodes
 def unknown_opcode(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x72')
+    conn.send(b'\x01\x00\x00\x00\x00\x71')
     return
 
 

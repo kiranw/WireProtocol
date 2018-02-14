@@ -6,6 +6,13 @@ Restructured and re-factored by Jim Waldo, 2/17/2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
+
+# Requires port input on the command line
+# ie. to run, try:
+# python3 myServer.py 8080
+
+
+
 import socket
 import logging
 import struct
@@ -92,6 +99,10 @@ def handler(conn,lock, myData, address):
 
 
 if __name__ == '__main__':
+    if(len(sys.argv) != 2):
+        print("Invalid input, proper usage: 'python3 myServer.py <port>'")
+        sys.exit()
+
     # Data structure for storing account information
     accounts = []
 
@@ -110,6 +121,8 @@ if __name__ == '__main__':
     'active_accounts': active_accounts,
     'connections': connections
     }
+
+    threads = []
 
     # Setup socket
     mySocket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
