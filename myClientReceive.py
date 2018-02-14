@@ -45,7 +45,7 @@ def login_success(conn,netBuffer):
 # Logout of an account that is currently logged in
 # On success, the user will be logged out (logout_success, \x41)
 def logout_success(conn,netBuffer):
-    print("Logout success! You are logged out. Disconnecting from server.")
+    print("Logout success! You are logged out.")
     return
 
 
@@ -79,5 +79,5 @@ def no_new_messages(conn, netBuffer):
 
 # Handle invalid opcodes received from the server.
 def unknown_opcode(conn):
-    print("ERROR: INCORRECT OPCODE")
+    print("ERROR: Invalid opcode received from server.")
     return

@@ -11,6 +11,7 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 # ie. to run, try:
 # python3 myServer.py 8080
 
+# _thread is supported on Windows, Linux, SGI IRIX, Solaris 2.x, as well as on systems that have a POSIX thread (a.k.a. “pthread”) implementation
 
 
 import socket

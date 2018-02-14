@@ -23,8 +23,8 @@ from struct import pack
 def create_request(conn):
     maxLength = 100
 
-    print('\x1b[6;30;42m' + "CREATING AN ACCOUNT" + '\x1b[0m' + "\n")
-    print('\x1b[6;30;42m' + "Enter a username less than 100 characters:" + '\x1b[0m' + "\n")
+    printGreen("CREATING AN ACCOUNT")
+    printGreen("Enter a username less than 100 characters:")
 
     act = ""
     while True:
@@ -35,7 +35,7 @@ def create_request(conn):
             send_message(b'\x01' + pack('!I',maxLength) + b'\x10' + pack('!'+str(maxLength)+'p',bytes(act, 'ascii')),conn)
             return
         else:
-            print('\x1b[6;30;42m' + "Exceeded length of username, must be less than 100 characters" + '\x1b[0m' + "\n")
+            printGreen("Exceeded length of username, must be less than 100 characters")
 
 
 # Delete the account that is currently logged in
@@ -43,7 +43,7 @@ def create_request(conn):
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn):
-    print('\x1b[6;30;42m' + "DELETING YOUR ACCOUNT" + '\x1b[0m' + "\n")
+    printGreen("DELETING YOUR ACCOUNT")
     send_message(b'\x01\x00\x00\x00\x00\x20',conn)
     return
 
@@ -57,8 +57,8 @@ def delete_request(conn):
 # act - account name
 def login_request(conn):
     maxLength = 100
-    print('\x1b[6;30;42m' + "LOGGING YOU IN" + '\x1b[0m' + "\n")
-    print('\x1b[6;30;42m' + "Enter your username:" + '\x1b[0m' + "\n")
+    printGreen("LOGGING YOU IN")
+    printGreen("Enter your username:")
     while True:
         act = input()
         
@@ -74,7 +74,7 @@ def login_request(conn):
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
 def logout_request(conn):
-    print('\x1b[6;30;42m' + "LOGGING YOU OUT" + '\x1b[0m' + "\n")
+    printGreen("LOGGING YOU OUT")
     send_message(b'\x01\x00\x00\x00\x00\x40',conn)
     return
 
@@ -88,14 +88,14 @@ def logout_request(conn):
 # dest_act - destination account
 # msg - message content
 def send_message_request(conn):
-    print('\x1b[6;30;42m' + "SEND A MESSAGE TO ANOTHER USER" + '\x1b[0m' + "\n")
-    print('\x1b[6;30;42m' + "Enter the destination account name:" + '\x1b[0m' + "\n")
+    printGreen("SEND A MESSAGE TO ANOTHER USER")
+    printGreen("Enter the destination account name:")
     while True:
         dest_act = input('>> ')
         if (len(dest_act) < 100):
             break
 
-    print('\x1b[6;30;42m' + "Enter your message:" + '\x1b[0m' + "\n")
+    printGreen("Enter your message:")
     while True:
         msg = input('>> ')
         if(len(msg) < 255):
@@ -126,6 +126,10 @@ def send_message(message, conn):
         conn.send(message)
     except:
         #close the client if the connection is down
-        print('\x1b[6;30;42m' + "ERROR: Oh no! It looks like the connection is down. Try again some other time!" + '\x1b[0m' + "\n")
+        printGreen("ERROR: Oh no! It looks like the connection is down. Try again some other time!")
         exit()
     return
+
+
+def printGreen(text):
+    print('\x1b[6;30;42m' + text + '\x1b[0m')

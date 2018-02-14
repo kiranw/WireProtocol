@@ -13,7 +13,7 @@ from myClientReceive import *
 #from myServerSend import *
 import sys
 from struct import unpack
-import threading
+import _thread as thread
 
 version = b'\x01'
 
@@ -49,7 +49,7 @@ opcodes = {b'\x11': create_success,
            b'\x72': no_new_messages
            }
 
-def getInput(mySocket):
+def getInput(mySocket,*args):
     print('''
 CONNECTED TO MESSAGE SERVER - type the number of a function:
     (1) Create Account
@@ -60,6 +60,7 @@ CONNECTED TO MESSAGE SERVER - type the number of a function:
     (6) Collect Undelivered Messages
     ''')
     netBuffer = input('>> ')
+    # processInput(netBuffer)
     return netBuffer
 
 def processInput(netBuffer):
@@ -86,9 +87,10 @@ def processInput(netBuffer):
     #collect undelivered messages 
     elif netBuffer == str(6):
         myClientSend.collect_messages_request(mySocket)
+    # getResponse(mySocket, 1)
     return
         
-def getResponse(mySocket):
+def getResponse(mySocket,*args):
     #wait for server responses...
     while True:
         try:
@@ -113,9 +115,6 @@ def getResponse(mySocket):
             break
         return
 
-class listenerThread(threading.Thread):
-   def run (self, socket):
-        getResponse(socket)
     
 if __name__ == '__main__':
     if(len(sys.argv) != 3):
@@ -134,8 +133,12 @@ if __name__ == '__main__':
         sys.exit()
 
     while True:
+        # need to pause the listener thread when the
+        # thread.start_new_thread(getInput, (mySocket,1))
+        # thread.start_new_thread(getResponse, (mySocket,1))
+
         netBuffer = getInput(mySocket)
-        # getResponse(mySocket)
+
         #menu selection and function priming
         processInput(netBuffer)
         getResponse(mySocket)

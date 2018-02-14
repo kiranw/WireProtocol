@@ -92,8 +92,8 @@ def login_request(conn,netBuffer,myData,lock,address):
                 return
 
             # See if account is already logged in
-            if act in myData['active_accounts']:
-                general_failure(conn,'login',"Account is already logged in to another user.")
+            if act in myData['active_accounts'].values():
+                general_failure(conn,'login',"Account is already logged in by another user.")
                 return
 
             # Mark user as active
@@ -158,6 +158,10 @@ def send_message_request(conn,netBuffer,myData,lock,address):
     try:
         active_dest = False
 
+        # sending message to self
+        if dest_act == myData['active_accounts'][address]:
+            collect_messages_success(myData['connections'][address], [msg])
+
         if dest_act in myData['active_accounts'].values():
             # That line is temporary, we should have to regenerate this each time       
             dest_address = dict((active_act, active_address) for active_address, active_act in myData['active_accounts'].items())[dest_act]
@@ -166,13 +170,14 @@ def send_message_request(conn,netBuffer,myData,lock,address):
             dest_conn = myData['connections'][dest_address]
             active_dest = True
             collect_messages_success(dest_conn, [msg])
+            send_message_success(conn, active_dest)
 
         else:
             if dest_act not in myData['messages']:
                 myData['messages'][dest_act] = []
             myData['messages'][dest_act].append(msg)
+            send_message_success(conn, active_dest)
         
-        send_message_success(conn, active_dest)
     finally:
         lock.release()
         print(myData)
