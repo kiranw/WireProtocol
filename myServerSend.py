@@ -15,51 +15,48 @@ import protocol
 def general_failure(conn, type, reason):
 
     # Find the appropriate opcode to send for particular errors
+    msg_type = None
     if type == 'create':
-        typebyte = b'\x12'
+        msg_type = protocol.CreateFailResponse
     elif type == 'delete':
-        typebyte = b'\x22'
+        msg_type = protocol.DeleteFailResponse
     elif type == 'login':
-        typebyte = b'\x32'
+        msg_type = protocol.LoginFailResponse
     elif type == 'logout':
-        typebyte = b'\x42'
+        msg_type = protocol.LogoutFailResponse
     elif type == 'send_message':
-        typebyte = b'\x52'
+        msg_type = protocol.SendFailResponse
     elif type == 'collect_messages':
-        typebyte = b'\x62'
+        msg_type = protocol.CollectFailResponse
+    else:
+        raise ValueError("Type {} is not a valid failure type.".format(type))
 
-    # Encode and send the string
-    utf = reason.encode('utf-8')
-    utflen = len(utf)
-    conn.send(b'\x01' + pack('!I',2 + utflen) + typebyte + pack('!h',utflen) + utf)
+    conn.send(protocol.make_message(msg_type, reason))
     return
 
 
 # Create new account success
 # The account is created and the client is logged in to that account
 def create_success(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x11')
-    return
+    conn.send(protocol.make_message(protocol.CreateSuccessResponse))
 
 
 # Delete an existing account success
 # The client will be logged out of the account, and account deleted
 def delete_success(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x21')
-    return
+    conn.send(protocol.make_message(protocol.DeleteSuccessResponse))
 
 
 # Login success
 # The client is logged in
 def login_success(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x31')
-    return
+    conn.send(protocol.make_message(protocol.LoginSuccessResponse))
+
 
 # Logout success
 # The client is logged out
 def logout_success(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x41')
-    return
+    conn.send(protocol.make_message(protocol.LogoutSuccessResponse))
 
 
 # Send message success
@@ -79,7 +76,6 @@ def send_message_success(conn, received):
     msg_binary = protocol.make_message(msg_type, msg)
 
     conn.send(msg_binary)
-    return
 
 # Collect message success
 # Returns a list of messages that were previously undelivered
@@ -97,5 +93,3 @@ def collect_messages_success(conn, messages):
 def unknown_opcode(conn):
     conn.send(b'\x01\x00\x00\x00\x00\x71')
     return
-
-
