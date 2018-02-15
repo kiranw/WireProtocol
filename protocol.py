@@ -1,7 +1,7 @@
 import struct
 
 import message
-from message import AbstractMessage, make_message
+from message import AbstractMessage, make_message, VERSION
 
 #
 # Client-to-server Requests
@@ -64,13 +64,35 @@ class CollectMessageRequest(AbstractMessage):
 # Server-to-client Responses
 #
 
+class GenericFailResponse(AbstractMessage):
+    """Generic fail response that handles string_length +
+    arbitrary_length_string type messages"""
+
+    @classmethod
+    def _encode(cls, text):
+        encoded_text = text.encode("utf-8")
+        length = len(encoded_text)
+        return struct.pack('!H', length) + encoded_text
+
+    @classmethod
+    def _decode(cls, binary_data):
+
+        length = struct.unpack('!H', binary_data[:2])
+
+        if len(binary_data[2:]) != length:
+            raise ValueError("Length reported for string is {}, got {}",format(length, len(binary_data[2:])))
+
+        # Read amount specified
+        text = binary_data[2:].decode("utf-8")
+        return text
+
 
 class CreateSuccessResponse(AbstractMessage):
     OPCODE = b'\x11'
     PACK_FORMAT = ""
 
 
-class CreateFailResponse(AbstractMessage):
+class CreateFailResponse(GenericFailResponse):
     OPCODE = b'\x12'
     PACK_FORMAT = ""
 
@@ -80,7 +102,7 @@ class DeleteSuccessResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
-class DeleteFailResponse(AbstractMessage):
+class DeleteFailResponse(GenericFailResponse):
     OPCODE = b'\x22'
     PACK_FORMAT = ""
 
@@ -90,7 +112,7 @@ class LoginSuccessResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
-class LoginFailResponse(AbstractMessage):
+class LoginFailResponse(GenericFailResponse):
     OPCODE = b'\x32'
     PACK_FORMAT = ""
 
@@ -100,7 +122,7 @@ class LogoutSuccessResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
-class LogoutFailResponse(AbstractMessage):
+class LogoutFailResponse(GenericFailResponse):
     OPCODE = b'\x42'
     PACK_FORMAT = ""
 
@@ -110,7 +132,7 @@ class SendSuccessResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
-class SendFailResponse(AbstractMessage):
+class SendFailResponse(GenericFailResponse):
     OPCODE = b'\x52'
     PACK_FORMAT = ""
 
@@ -126,7 +148,7 @@ class CollectSuccessResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
-class CollectFailResponse(AbstractMessage):
+class CollectFailResponse(GenericFailResponse):
     OPCODE = b'\x62'
     PACK_FORMAT = ""
 
