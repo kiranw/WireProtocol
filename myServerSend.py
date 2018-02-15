@@ -7,7 +7,6 @@ Altered Feb. 20, 2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
-from struct import pack
 import protocol
 
 
@@ -82,14 +81,12 @@ def send_message_success(conn, received):
 def collect_messages_success(conn, messages):
     # What happens in the case of partial failure to send a message?
     if len(messages) == 0:
-        conn.send(b'\x01\x00\x00\x00\x00\x63')
-    for message in messages:
-        utf = message.encode('utf-8')
-        utflen = len(utf)
-        conn.send(b'\x01' + pack('!I',2 + utflen) + b'\x61' + pack('!h',utflen) + utf)
+        conn.send(protocol.make_message(protocol.CollectNoNewResponse))
+    for message_text in messages:
+        conn.send(protocol.make_message(protocol.CollectSuccessResponse, message_text))
     return
 
 # Handle invalid opcodes
 def unknown_opcode(conn):
-    conn.send(b'\x01\x00\x00\x00\x00\x71')
+    conn.send(protocol.make_message(protocol.UnknownMessageResponse))
     return
