@@ -8,11 +8,12 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 from struct import pack
+import protocol
 
 
 # General failure is a method used to send any failure message, tagged with a typebyte associated with a particular operation
 def general_failure(conn, type, reason):
-    
+
     # Find the appropriate opcode to send for particular errors
     if type == 'create':
         typebyte = b'\x12'
@@ -26,7 +27,7 @@ def general_failure(conn, type, reason):
         typebyte = b'\x52'
     elif type == 'collect_messages':
         typebyte = b'\x62'
-    
+
     # Encode and send the string
     utf = reason.encode('utf-8')
     utflen = len(utf)
@@ -63,17 +64,21 @@ def logout_success(conn):
 
 # Send message success
 # Returns whether the messages were undelivered and stored or delivered immediately
-def send_message_success(conn,received):
+def send_message_success(conn, received):
     # If received is true, the destination user was active
     # Else, the user's messages are collected in the server
     # received is a boolean - do we want to send it as such? is it worth even notifying the client of this?
-    msg = 'Destination user is not online; messages will be delivered later'
+
     if received:
         msg = 'Destination user is online; messages delivered'
+        msg_type = protocol.SendSuccessResponse
+    else:
+        msg = 'Destination user is not online; messages will be delivered later'
+        msg_type = protocol.SendQueuedResponse
 
-    utf = msg.encode('utf-8')
-    utflen = len(utf)
-    conn.send(b'\x01' + pack('!I',2 + utflen) + b'\x51' + pack('!h',utflen) + utf)
+    msg_binary = protocol.make_message(msg_type, msg)
+
+    conn.send(msg_binary)
     return
 
 # Collect message success
@@ -81,7 +86,7 @@ def send_message_success(conn,received):
 def collect_messages_success(conn, messages):
     # What happens in the case of partial failure to send a message?
     if len(messages) == 0:
-        conn.send(b'\x01\x00\x00\x00\x00\x72')
+        conn.send(b'\x01\x00\x00\x00\x00\x63')
     for message in messages:
         utf = message.encode('utf-8')
         utflen = len(utf)
