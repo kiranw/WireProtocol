@@ -260,38 +260,3 @@ def parse_message(binary_data):
     # b'\x50': myServerReceive.send_message_request,
     # b'\x60': myServerReceive.collect_messages,
 # }
-
-# import myClientReceive
-# response_handlers = {
-    # # Create_success
-    # b'\x11': myClientReceive.create_success,
-    # # Create failure
-    # b'\x12': myClientReceive.general_failure,
-    # # Delete success
-    # b'\x21': myClientReceive.delete_success,
-    # # Delete failure
-    # b'\x22': myClientReceive.general_failure,
-    # # Login success
-    # b'\x31': myClientReceive.login_success,
-    # # Login failure
-    # b'\x32': myClientReceive.general_failure,
-    # # Logout success
-    # b'\x41': myClientReceive.logout_success,
-    # # Logout failure
-    # b'\x42': myClientReceive.general_failure,
-    # # Send message success
-    # b'\x51': myClientReceive.send_message_success,
-    # # Send message failure
-    # b'\x52': myClientReceive.general_failure,
-    # # Collect messages success
-    # b'\x61': myClientReceive.collect_messages_success,
-    # # Collect messages failure
-    # b'\x62': myClientReceive.general_failure,
-
-
-    # # Unknown opcode
-    # b'\x71': myClientReceive.unknown_opcode,
-
-    # # No new messages
-    # b'\x72': myClientReceive.no_new_messages
-# }
