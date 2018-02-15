@@ -37,3 +37,8 @@ messaging back and forth.
 - myClientSend.py: Send functions for every message type for the client
 - myServerReceive.py: Handling routines for every message type for the server
 - myClientReceive.py: Handling routines for every message type for the server
+
+## TODOs
+
+- Add second thread to client to poll for messages?
+- Add message for "user offline, message stored"
