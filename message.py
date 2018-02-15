@@ -6,7 +6,7 @@ VERSION = b'\x01'
 
 def make_header(opcode, message_length, version=VERSION):
     """Make a header binary string: version + length + opcode"""
-    return version + struct.pack('!I', 2 + message_length) + opcode
+    return version + struct.pack('!I', message_length) + opcode
 
 
 def parse_header(binary_data, version=VERSION):
