@@ -20,9 +20,7 @@ def parse_header(binary_data, version=VERSION):
     if len(binary_data) != 6:
         raise ValueError("Header must be 6 bytes, got {}.".format(len(binary_data)))
 
-    message_length = struct.unpack("!I", binary_data[1:5])[0]
-    opcode = binary_data[5:6]
-
+    message_length, opcode = struct.unpack("!Ic", binary_data[1:])
     return opcode, message_length
 
 
