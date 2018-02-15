@@ -4,6 +4,40 @@ import message
 from message import AbstractMessage, make_message, VERSION
 
 #
+# Generic message types
+#
+
+
+class GenericSingleTextMessage(AbstractMessage):
+    """Generic message type that handles string_length +
+    arbitrary_length_string type messages"""
+
+    @classmethod
+    def _encode(cls, text):
+        encoded_text = text.encode("utf-8")
+        length = len(encoded_text)
+        return struct.pack('!H', length) + encoded_text
+
+    @classmethod
+    def _decode(cls, binary_data):
+
+        length = struct.unpack('!H', binary_data[:2])[0]
+
+        if len(binary_data[2:]) != length:
+            raise ValueError("Length reported for string is {}, got {}".format(length, len(binary_data[2:])))
+
+        # Read amount specified
+        text = binary_data[2:].decode("utf-8")
+        return (text, )
+
+
+class GenericFailResponse(GenericSingleTextMessage):
+    """Generic fail response that handles string_length +
+    arbitrary_length_string type messages"""
+    pass
+
+
+#
 # Client-to-server Requests
 #
 
@@ -50,7 +84,7 @@ class SendMessageRequest(AbstractMessage):
     def _decode(cls, binary_data):
         dest_account = struct.unpack('!100p', binary_data[:100])
         text = struct.unpack('!255p', binary_data[100:])
-        return dest_account, text
+        return (dest_account, text)
 
 
 class CollectMessageRequest(AbstractMessage):
@@ -63,28 +97,6 @@ class CollectMessageRequest(AbstractMessage):
 #
 # Server-to-client Responses
 #
-
-class GenericFailResponse(AbstractMessage):
-    """Generic fail response that handles string_length +
-    arbitrary_length_string type messages"""
-
-    @classmethod
-    def _encode(cls, text):
-        encoded_text = text.encode("utf-8")
-        length = len(encoded_text)
-        return struct.pack('!H', length) + encoded_text
-
-    @classmethod
-    def _decode(cls, binary_data):
-
-        length = struct.unpack('!H', binary_data[:2])
-
-        if len(binary_data[2:]) != length:
-            raise ValueError("Length reported for string is {}, got {}",format(length, len(binary_data[2:])))
-
-        # Read amount specified
-        text = binary_data[2:].decode("utf-8")
-        return text
 
 
 class CreateSuccessResponse(AbstractMessage):
@@ -127,23 +139,23 @@ class LogoutFailResponse(GenericFailResponse):
     PACK_FORMAT = ""
 
 
-class SendSuccessResponse(AbstractMessage):
+class SendSuccessResponse(GenericSingleTextMessage):
     OPCODE = b'\x51'
     PACK_FORMAT = ""
 
 
-class SendFailResponse(GenericFailResponse):
+class SendFailResponse(GenericSingleTextMessage):
     OPCODE = b'\x52'
     PACK_FORMAT = ""
 
 
-class SendQueuedResponse(AbstractMessage):
+class SendQueuedResponse(GenericSingleTextMessage):
     """User offline but server queued the message"""
     OPCODE = b'\x53'
     PACK_FORMAT = ""
 
 
-class CollectSuccessResponse(AbstractMessage):
+class CollectSuccessResponse(GenericSingleTextMessage):
     OPCODE = b'\x61'
     PACK_FORMAT = ""
 
@@ -185,6 +197,8 @@ RESPONSE_MESSAGES = [
     DeleteFailResponse,
     LoginSuccessResponse,
     LoginFailResponse,
+    LogoutSuccessResponse,
+    LogoutFailResponse,
     SendSuccessResponse,
     SendFailResponse,
     SendQueuedResponse,
