@@ -7,9 +7,8 @@ Altered Feb. 20, 2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
-from struct import pack
-# from sys import maxint, exit
-
+import protocol
+from util import printGreen, printRed
 
 
 # Create new account
@@ -17,7 +16,7 @@ from struct import pack
 # If account creation is successful, the user will automatically be
 # logged in to their account (create_success, \x11)
 # On failure, a failure message is received (general_failure, \x12)
-# 
+#
 # Arguments sent to server:
 # act - account name
 def create_request(conn):
@@ -26,16 +25,15 @@ def create_request(conn):
     printGreen("CREATING AN ACCOUNT")
     printGreen("Enter a username less than 100 characters:")
 
-    act = ""
+    account_name = ""
     while True:
-        act = input()
-        
-        if(len(act) < maxLength):
-            # send_message(b'\x01\x00\x00\x00\x00\x10', conn)
-            send_message(b'\x01' + pack('!I',maxLength) + b'\x10' + pack('!'+str(maxLength)+'p',bytes(act, 'ascii')),conn)
+        account_name = input()
+
+        if(len(account_name) < maxLength):
+            send_message(protocol.make_message(protocol.CreateRequest, account_name), conn)
             return
         else:
-            printGreen("Exceeded length of username, must be less than 100 characters")
+            printRed("Exceeded length of username, must be less than 100 characters")
 
 
 # Delete the account that is currently logged in
@@ -44,7 +42,7 @@ def create_request(conn):
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn):
     printGreen("DELETING YOUR ACCOUNT")
-    send_message(b'\x01\x00\x00\x00\x00\x20',conn)
+    send_message(protocol.make_message(protocol.DeleteRequest), conn)
     return
 
 
@@ -52,7 +50,7 @@ def delete_request(conn):
 # A user will submit a username
 # On success, the user will be logged in (login_success, \x31)
 # on failure, the user will remain logged out (general_failure, \x32)
-# 
+#
 # Arguments sent to server:
 # act - account name
 def login_request(conn):
@@ -60,11 +58,10 @@ def login_request(conn):
     printGreen("LOGGING YOU IN")
     printGreen("Enter your username:")
     while True:
-        act = input()
-        
-        if(len(act) < maxLength):
-            # send_message(b'\x01\x00\x00\x00\x00\x10', conn)
-            send_message(b'\x01' + pack('!I',maxLength) + b'\x30' + pack('!'+str(maxLength)+'p', bytes(act, 'ascii')),conn)
+        account_name = input()
+
+        if(len(account_name) < maxLength):
+            send_message(protocol.make_message(protocol.LoginRequest, account_name), conn)
             return
     return
 
@@ -75,7 +72,7 @@ def login_request(conn):
 # their previous state (general_failure, \x42)
 def logout_request(conn):
     printGreen("LOGGING YOU OUT")
-    send_message(b'\x01\x00\x00\x00\x00\x40',conn)
+    send_message(protocol.make_message(protocol.LogoutRequest), conn)
     return
 
 
@@ -83,7 +80,7 @@ def logout_request(conn):
 # On success, the server receives the message from the user (send_message_success, \x51)
 # This does not mean the destination account has received the message
 # On failure, the message is not received by the server (general_failure, \x52)
-# 
+#
 # Arguments sent to server:
 # dest_act - destination account
 # msg - message content
@@ -91,17 +88,17 @@ def send_message_request(conn):
     printGreen("SEND A MESSAGE TO ANOTHER USER")
     printGreen("Enter the destination account name:")
     while True:
-        dest_act = input('>> ')
-        if (len(dest_act) < 100):
+        dest_account = input('>> ')
+        if (len(dest_account) < 100):
             break
 
     printGreen("Enter your message:")
     while True:
-        msg = input('>> ')
-        if(len(msg) < 255):
+        message = input('>> ')
+        if(len(message) < 255):
             break
 
-    send_message(b'\x01' + pack('!I',355) + b'\x50' + pack('!100p',bytes(dest_act,'ascii')) + pack('!255p',bytes(msg,'ascii')),conn)
+    send_message(protocol.make_message(protocol.SendMessageRequest, dest_account, message), conn)
     return
 
 
@@ -109,7 +106,7 @@ def send_message_request(conn):
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
 def collect_messages_request(conn):
-    send_message(b'\x01\x00\x00\x00\x00\x60',conn)
+    send_message(protocol.make_message(protocol.CollectMessageRequest), conn)
     return
 
 
@@ -125,11 +122,7 @@ def send_message(message, conn):
     try:
         conn.send(message)
     except:
-        #close the client if the connection is down
-        printGreen("ERROR: Oh no! It looks like the connection is down. Try again some other time!")
+        # Close the client if the connection is down
+        printRed("ERROR: Oh no! It looks like the connection is down. Try again some other time!")
         exit()
     return
-
-
-def printGreen(text):
-    print('\x1b[6;30;42m' + text + '\x1b[0m')
