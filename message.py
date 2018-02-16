@@ -50,7 +50,7 @@ class AbstractMessage(object):
     PACK_FORMAT = None
 
     @classmethod
-    def _encode(cls, *args, **kwargs):
+    def _encode(cls, *args):
         """Default implementation will look for PACK_FORMAT and do
         struct.pack() with it and pass the arguments in. For more complicated
         behavior you'll have to override this."""
@@ -58,7 +58,12 @@ class AbstractMessage(object):
         if cls.PACK_FORMAT is None:
             raise NotImplementedError("""The message class {} does not have a property called PACK_FORMAT""".format(cls))
 
-        return struct.pack(cls.PACK_FORMAT, *args, **kwargs)
+        # If any arguments are strings, encode them to binary as utf-8
+        for i, arg in enumerate(args):
+            if type(arg) is str:
+                args[i] = arg.encode("utf-8")
+
+        return struct.pack(cls.PACK_FORMAT, *args)
 
     @classmethod
     def _decode(cls, binary_data):
@@ -69,4 +74,11 @@ class AbstractMessage(object):
         if cls.PACK_FORMAT is None:
             raise NotImplementedError("""The message class {} does not have a property called PACK_FORMAT""".format(cls))
 
-        return struct.unpack(cls.PACK_FORMAT, binary_data)
+        unpacked = struct.unpack(cls.PACK_FORMAT, binary_data)
+
+        # If any results are strings, encode them to binary as utf-8
+        for i, arg in enumerate(unpacked):
+            if type(arg) is str:
+                unpacked[i] = arg.decode("utf-8")
+
+        return unpacked
