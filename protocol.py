@@ -1,7 +1,7 @@
 import struct
 
 import message
-from message import AbstractMessage
+from message import AbstractMessage, make_message
 
 #
 # Generic message types
@@ -168,6 +168,11 @@ class CollectFailResponse(GenericFailResponse):
 class CollectNoNewResponse(AbstractMessage):
     """No new messages to collect"""
     OPCODE = b'\x63'
+    PACK_FORMAT = ""
+
+
+class EndSessionResponse(GenericSingleTextMessage):
+    OPCODE = b'\x98'
     PACK_FORMAT = ""
 
 

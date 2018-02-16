@@ -7,7 +7,6 @@ Altered Feb. 20, 2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
-from struct import unpack
 from sys import exit
 import protocol
 
@@ -70,9 +69,16 @@ def no_new_messages():
     print("You have no new messages.")
     return
 
+
 # Handle invalid opcodes received from the server.
 def unknown_opcode():
     print("ERROR: Invalid opcode received from server.")
+    return
+
+
+def end_session(message):
+    print("Server ended the session: {}".format(message))
+    sys.exit(0)
     return
 
 
@@ -103,6 +109,9 @@ response_handlers = {
     protocol.CollectFailResponse: general_failure,
     # No new messages
     protocol.CollectNoNewResponse: no_new_messages,
+
+    # Server ended session
+    protocol.EndSessionResponse: end_session,
 
     # Unknown opcode
     protocol.UnknownMessageResponse: unknown_opcode,
