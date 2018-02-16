@@ -1,7 +1,7 @@
 import struct
 
 import message
-from message import AbstractMessage, make_message, VERSION
+from message import AbstractMessage
 
 #
 # Generic message types
