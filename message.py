@@ -59,6 +59,7 @@ class AbstractMessage(object):
             raise NotImplementedError("""The message class {} does not have a property called PACK_FORMAT""".format(cls))
 
         # If any arguments are strings, encode them to binary as utf-8
+        args = list(args)
         for i, arg in enumerate(args):
             if type(arg) is str:
                 args[i] = arg.encode("utf-8")
