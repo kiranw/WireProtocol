@@ -66,7 +66,14 @@ def handler(conn, lock, myData, address):
             logging.getLogger().info('Server state: {}', myData)
 
         except:
+            # Tell the client we're ending their session and log them out
             myServerSend.end_session(conn, "Server side exception, closing connection.")
+
+            # Log out user
+            if address in myData['active_accounts']:
+                del myData['active_accounts'][address]
+                del myData['connections'][address]
+
             conn.close()
 
             traceback.print_stack()
