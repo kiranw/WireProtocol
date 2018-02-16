@@ -6,39 +6,23 @@ Restructured and re-factored by Jim Waldo, 2/17/2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
-
-# Requires port input on the command line
-# ie. to run, try:
-# python3 myServer.py 8080
-
-# _thread is supported on Windows, Linux, SGI IRIX, Solaris 2.x, as well as on systems that have a POSIX thread (a.k.a. “pthread”) implementation
-
-
-import socket
 import logging
-import struct
 from logging.config import dictConfig
+import socket
+import struct
+import sys
+import _thread as thread
+import traceback
+
+import protocol
 import myServerReceive
 import myServerSend
-from myServerSend import unknown_opcode
-import _thread as thread
-import sys
 
 
 # TODO
 # Think about design of the collect messages function
 # When connection is closed on client side, that is not reported to the server
 
-version = b'\x01'
-
-# Opcodes to be sent by client
-opcodes = {b'\x10': myServerReceive.create_request,        # Create account <username>
-           b'\x20': myServerReceive.delete_request,        # Delete, only if logged in
-           b'\x30': myServerReceive.login_request,         # Login <username>, only if user exists
-           b'\x40': myServerReceive.logout_request,        # Logout, only if logged in
-           b'\x50': myServerReceive.send_message_request,  # Send message <dest_username> <message>
-           b'\x60': myServerReceive.collect_messages,      # Collect messages, only if logged in
-           }
 
 logging_config = dict(
     version=1,
@@ -60,43 +44,35 @@ logging_config = dict(
 dictConfig(logging_config)
 
 #thread for handling clients
-def handler(conn,lock, myData, address):
-    logging.getLogger().info('Handler being invoked')
-    #keep track of erroneous opcodes
-    second_attempt = 0
+def handler(conn, lock, myData, address):
+
     while True:
-        #retrieve header
+        print("trying")
         try:
-            print("trying")
-            netbuffer = conn.recv( 1024 )
+            # Wait until I read a message
+            message_type, message_args = protocol.receive_message(conn)
+            logging.getLogger().info('Address %s: Received request %s: %s ', address, message_type, message_args)
+
+            # Find the handler function for that message
+            handler = myServerReceive.request_handlers.get(message_type, None)
+
+            if handler is None:
+                myServerSend.unknown_opcode(conn)
+                raise ValueError("There was no response handler found for message type {}".format(message_type))
+
+            # Run the handler, passing in the stuff we decoded from the message
+            handler(conn, message_args, myData, lock, address)
+
+            logging.getLogger().info('Server state: {}', myData)
+
         except:
-            #close the thread if the connection is down
+            myServerSend.end_session(conn, "Server side exception, closing connection.")
+            conn.close()
+
+            traceback.print_stack()
+            traceback.print_exc()
+            # close the thread if the connection is down
             thread.exit()
-        #if we receive a message...
-        if len(netbuffer) >= 6:
-            # logging.getLogger().info('Netbuffer is at least 6 chars')
-            #unpack it...
-            header = struct.unpack('!cIc', netbuffer[0:6])
-            # logging.getLogger().info(header)
-            #only allow correct version numbers and buffers that are of the appropriate length
-            if header[0] == version and len(netbuffer) == header[1] + 6:
-                opcode = header[2]
-                # logging.getLogger().info(opcode)
-                #try to send packet to correct handler
-                try:
-                    logging.getLogger().info('Received request with opcode %s ', opcode)
-                    opcodes[opcode](conn,netbuffer,myData,lock,address)
-                #catch unhandled opcodes
-                except KeyError:
-                    if(second_attempt):
-                        #disconnect the client
-                        myServerSend.end_session_success(conn)
-                        conn.close()
-                        return
-                    else:
-                        #send incorrect opcode message
-                        second_attempt = 1
-                        unknown_opcode(conn)
 
 
 if __name__ == '__main__':
@@ -110,7 +86,7 @@ if __name__ == '__main__':
     # A list of messages is associated with a username
     messages = {}
 
-    # Active accounts, maps addresses to accounts 
+    # Active accounts, maps addresses to accounts
     active_accounts = {}
 
     # Connections, maps addresses to connections

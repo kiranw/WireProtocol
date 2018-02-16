@@ -18,8 +18,7 @@ import protocol
 # A user can only create an account if they are not logged in
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
-def create_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!100p',netBuffer[6:107])
+def create_request(conn, args, myData, lock, address):
 
     lock.acquire()
     try:
@@ -27,8 +26,8 @@ def create_request(conn,netBuffer,myData,lock,address):
             general_failure(conn,'create',"User is currently logged in. Cannot create a new account.")
             return
 
-        if values[0]:
-            act = values[0]
+        if args[0]:
+            act = args[0]
             if act in myData['accounts']:
                 general_failure(conn,'create',"Account already in use; select a different username")
                 return
@@ -40,13 +39,15 @@ def create_request(conn,netBuffer,myData,lock,address):
         create_success(conn)
     finally:
         lock.release()
+    print(myData)
     return
+
 
 # Delete the account that is currently logged in
 # A user will be logged out and the account deleted if this request
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
-def delete_request(conn,netBuffer,myData,lock,address):
+def delete_request(conn, netBuffer, myData, lock, address):
 
     lock.acquire()
     try:
@@ -72,12 +73,11 @@ def delete_request(conn,netBuffer,myData,lock,address):
 #
 # Arguments sent to server:
 # act - account name
-def login_request(conn,netBuffer,myData,lock,address):
-    values = unpack('!100p',netBuffer[6:106])
+def login_request(conn, args, myData, lock, address):
     lock.acquire()
     try:
-        if values[0]:
-            act = values[0]
+        if args[0]:
+            act = args[0]
 
             # See if this user is logged in already
             if address in myData['active_accounts']:
@@ -100,7 +100,6 @@ def login_request(conn,netBuffer,myData,lock,address):
             login_success(conn)
     finally:
         lock.release()
-        print(myData)
     return
 
 
@@ -108,12 +107,12 @@ def login_request(conn,netBuffer,myData,lock,address):
 # On success, the user will be logged out (logout_success, \x41)
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
-def logout_request(conn,netBuffer,myData,lock,address):
+def logout_request(conn, args, myData, lock, address):
     lock.acquire()
     try:
         # See if this user is not logged in to anything
         if address not in myData['active_accounts']:
-            general_failure(conn, 'logout',"User is already logged out.")
+            general_failure(conn, 'logout', "User is already logged out.")
             return
 
         # Mark user as inactive
@@ -122,7 +121,6 @@ def logout_request(conn,netBuffer,myData,lock,address):
         logout_success(conn)
     finally:
         lock.release()
-        print(myData)
     return
 
 
@@ -134,8 +132,8 @@ def logout_request(conn,netBuffer,myData,lock,address):
 # Arguments sent to server:
 # dest_act - destination account
 # msg - message content
-def send_message_request(conn,netBuffer,myData,lock,address):
-    (dest_act, msg) = unpack('!100p255p',netBuffer[6:362])
+def send_message_request(conn, args, myData, lock, address):
+    (dest_act, msg) = args
 
     lock.acquire()
 
@@ -175,14 +173,13 @@ def send_message_request(conn,netBuffer,myData,lock,address):
 
     finally:
         lock.release()
-        print(myData)
     return
 
 
 # Collect undelivered messages
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
-def collect_messages(conn,netBuffer,myData,lock,address):
+def collect_messages(conn, args, myData, lock, address):
     lock.acquire()
     try:
         if address not in myData['active_accounts']:
@@ -199,5 +196,15 @@ def collect_messages(conn,netBuffer,myData,lock,address):
         collect_messages_success(conn,messages)
     finally:
         lock.release()
-        print(myData)
     return
+
+
+# Which function should handle what request
+request_handlers = {
+    protocol.CreateRequest: create_request,
+    protocol.DeleteRequest: delete_request,
+    protocol.LoginRequest: login_request,
+    protocol.LogoutRequest: logout_request,
+    protocol.SendMessageRequest: send_message_request,
+    protocol.CollectMessageRequest: collect_messages,
+}

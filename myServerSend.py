@@ -86,6 +86,11 @@ def collect_messages_success(conn, messages):
         conn.send(protocol.make_message(protocol.CollectSuccessResponse, message_text))
     return
 
+
+def end_session(conn, message):
+    conn.send(protocol.make_message(protocol.EndSessionResponse, message))
+    return
+
 # Handle invalid opcodes
 def unknown_opcode(conn):
     conn.send(protocol.make_message(protocol.UnknownMessageResponse))
