@@ -75,11 +75,11 @@ class AbstractMessage(object):
         if cls.PACK_FORMAT is None:
             raise NotImplementedError("""The message class {} does not have a property called PACK_FORMAT""".format(cls))
 
-        unpacked = struct.unpack(cls.PACK_FORMAT, binary_data)
+        unpacked = list(struct.unpack(cls.PACK_FORMAT, binary_data))
 
         # If any results are strings, encode them to binary as utf-8
         for i, arg in enumerate(unpacked):
-            if type(arg) is str:
+            if type(arg) is bytes:
                 unpacked[i] = arg.decode("utf-8")
 
         return unpacked

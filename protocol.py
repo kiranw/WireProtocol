@@ -82,8 +82,8 @@ class SendMessageRequest(AbstractMessage):
 
     @classmethod
     def _decode(cls, binary_data):
-        dest_account = struct.unpack('!100p', binary_data[:100])
-        text = struct.unpack('!255p', binary_data[100:])
+        dest_account = struct.unpack('!100p', binary_data[:100])[0].decode("ascii")
+        text = struct.unpack('!255p', binary_data[100:])[0].decode("ascii")
         return (dest_account, text)
 
 
