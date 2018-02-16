@@ -262,15 +262,3 @@ def parse_message(binary_data):
         raise ValueError("Invalid opcode {}".format(opcode))
 
     return message_type, message_type._decode(message_body)
-
-
-
-# import myServerReceive
-# request_handlers = {
-    # Request.CREATE: myServerReceive.create_request,
-    # b'\x20': myServerReceive.delete_request,
-    # b'\x30': myServerReceive.login_request,
-    # b'\x40': myServerReceive.logout_request,
-    # b'\x50': myServerReceive.send_message_request,
-    # b'\x60': myServerReceive.collect_messages,
-# }
