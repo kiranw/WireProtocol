@@ -54,14 +54,15 @@ def handler(conn, lock, myData, address):
             logging.getLogger().info('Address %s: Received request %s: %s ', address, message_type, message_args)
 
             # Find the handler function for that message
-            handler = myServerReceive.request_handlers.get(message_type, None)
+            request_handler = myServerReceive.request_handlers.get(message_type, None)
+            print("request handler:", request_handler)
 
-            if handler is None:
+            if request_handler is None:
                 myServerSend.unknown_opcode(conn)
                 raise ValueError("There was no response handler found for message type {}".format(message_type))
 
             # Run the handler, passing in the stuff we decoded from the message
-            handler(conn, message_args, myData, lock, address)
+            request_handler(conn, message_args, myData, lock, address)
 
             logging.getLogger().info('Server state: {}', myData)
 

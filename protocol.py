@@ -181,11 +181,23 @@ class UnknownMessageResponse(AbstractMessage):
     PACK_FORMAT = ""
 
 
+# Create a mapping to see if responses match the type of request that was sent
+REQUEST_RESPONSE_MAPPINGS = {
+    "1": [CreateSuccessResponse, CreateFailResponse],
+    "2": [DeleteSuccessResponse, DeleteFailResponse],
+    "3": [LoginSuccessResponse, LoginFailResponse],
+    "4": [LogoutSuccessResponse, LogoutFailResponse],
+    "5": [SendSuccessResponse, SendFailResponse, SendQueuedResponse],
+    "6": [CollectSuccessResponse, CollectFailResponse, CollectNoNewResponse]
+}
+ 
+# Return True if the response type matches the behavior expected, to see if messages are caught up on client side
+def matchingRequestResponse(menu_number, message_type):
+    return message_type in REQUEST_RESPONSE_MAPPINGS[menu_number]
+
 #
 # Lookup data structures to find messages easily
 #
-
-
 REQUEST_MESSAGES = [
     CreateRequest,
     DeleteRequest,

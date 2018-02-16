@@ -19,9 +19,10 @@ import protocol
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
 def create_request(conn, args, myData, lock, address):
-
+    print("Create request 0")
     lock.acquire()
     try:
+        print("Create request 1")
         if address in myData['active_accounts']:
             general_failure(conn,'create',"User is currently logged in. Cannot create a new account.")
             return
@@ -38,6 +39,7 @@ def create_request(conn, args, myData, lock, address):
 
         create_success(conn)
     finally:
+        print("Create request 2")
         lock.release()
     print(myData)
     return
@@ -48,9 +50,10 @@ def create_request(conn, args, myData, lock, address):
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn, netBuffer, myData, lock, address):
-
+    print("Delete request 0")
     lock.acquire()
     try:
+        print("Delete request 1")
         # Check if the current user is logged in
         if address not in myData['active_accounts']:
             general_failure(conn,'delete',"User is not logged in; Cannot delete account")
@@ -74,11 +77,14 @@ def delete_request(conn, netBuffer, myData, lock, address):
 # Arguments sent to server:
 # act - account name
 def login_request(conn, args, myData, lock, address):
+    print("Login Request 0")
     lock.acquire()
     try:
+        print("Login Request 1")
         if args[0]:
             act = args[0]
 
+            print("Login Request 2")
             # See if this user is logged in already
             if address in myData['active_accounts']:
                 general_failure(conn,'login',"User is currently logged in to an account. Cannot login.")
@@ -99,6 +105,7 @@ def login_request(conn, args, myData, lock, address):
             myData['connections'][address] = conn
             login_success(conn)
     finally:
+        print("Login Request 3")
         lock.release()
     return
 
@@ -108,8 +115,10 @@ def login_request(conn, args, myData, lock, address):
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
 def logout_request(conn, args, myData, lock, address):
+    print("Logout Request 0")
     lock.acquire()
     try:
+        print("Logout Request 1")
         # See if this user is not logged in to anything
         if address not in myData['active_accounts']:
             general_failure(conn, 'logout', "User is already logged out.")
@@ -120,6 +129,7 @@ def logout_request(conn, args, myData, lock, address):
         del myData['connections'][address]
         logout_success(conn)
     finally:
+        print("Logout Request 2")
         lock.release()
     return
 
@@ -149,22 +159,23 @@ def send_message_request(conn, args, myData, lock, address):
 
     # Handle the message
     try:
-        active_dest = False
+        # Specifies whether the target destination is currently online or not
+        active_dest = dest_act in myData['active_accounts'].values()
 
-        # sending message to self
+        # Sending message to self - send, and notify of success
         if dest_act == myData['active_accounts'][address]:
-            collect_messages_success(myData['connections'][address], [msg])
+            collect_messages_success(conn, [msg])
+            send_message_success(conn, active_dest)
 
-        if dest_act in myData['active_accounts'].values():
-            # That line is temporary, we should have to regenerate this each time
+        # If the destination user is online, send message immediately
+        elif active_dest:
+            # Get the destination account's connection and address
             dest_address = dict((active_act, active_address) for active_address, active_act in myData['active_accounts'].items())[dest_act]
-            # TODO send messages to active user, identify what thread that user is on (does each message get a from: field?)
-            # Do threads need to poll some sort of list of pending messages to see if they should deliver?
             dest_conn = myData['connections'][dest_address]
-            active_dest = True
             collect_messages_success(dest_conn, [msg])
             send_message_success(conn, active_dest)
 
+        # Queue the message to send whenever the destination user collects messages later
         else:
             if dest_act not in myData['messages']:
                 myData['messages'][dest_act] = []

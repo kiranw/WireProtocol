@@ -56,6 +56,11 @@ def send_message_success(response_text):
     print("\nMessages sent successfully: {}".format(response_text))
     return
 
+# Send a message to an existing account
+# On success, the message was queued because the destination user was not online
+def send_queued_success(response_text):
+    print("\nYour message was sent successfully, and is being queued")
+    return
 
 # Collect undelivered messages
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
@@ -103,6 +108,8 @@ response_handlers = {
     protocol.SendSuccessResponse: send_message_success,
     # Send message failure
     protocol.SendFailResponse: general_failure,
+    # Send message queued
+    protocol.SendQueuedResponse: send_queued_success,
     # Collect messages success
     protocol.CollectSuccessResponse: collect_messages_success,
     # Collect messages failure

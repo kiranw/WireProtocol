@@ -120,6 +120,7 @@ def collect_messages_request(conn):
 # On failure (if the connection is down) the client closes
 def send_message(message, conn):
     try:
+        print("Trying to send the message now")
         conn.send(message)
     except:
         # Close the client if the connection is down

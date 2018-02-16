@@ -17,6 +17,7 @@ import myClientReceive
 import protocol
 
 
+# Print user menu and collect input to client
 def user_menu():
     print('''
 CONNECTED TO MESSAGE SERVER - type the number of a function:
@@ -30,6 +31,7 @@ CONNECTED TO MESSAGE SERVER - type the number of a function:
     return input('>> ')
 
 
+# Handle client request based on menu input
 def run_submenu_selection(menu_number, mySocket):
 
     if menu_number == str(1):
@@ -62,10 +64,13 @@ def run_submenu_selection(menu_number, mySocket):
     return True
 
 
+# Collect server response and handle using message type as specified in protocol
+# If the response receieved does not match the response expected, getResponse again
+# Makes sure client has collected all information from server until it is caught up to
+# the current operation
 def getResponse(mySocket, *args):
     while True:
         try:
-
             # Wait until I read a message
             message_type, message_args = protocol.receive_message(mySocket)
             print(message_type, message_args)
@@ -79,14 +84,17 @@ def getResponse(mySocket, *args):
             # Run the handler, passing in the stuff we decoded from the message
             response_handler(*message_args)
 
+            # If the response doesn't match the request, we should get the next response after this operation finishes
+            # Make sure client is caught up to the messages on the connection
+            if protocol.matchingRequestResponse(menu_number, message_type):
+                return
+
         except Exception:
             # close the client if the connection is down
             import traceback
             traceback.print_exc()
             print("ERROR: connection down")
             sys.exit()
-
-        return
 
 
 if __name__ == '__main__':
@@ -100,16 +108,12 @@ if __name__ == '__main__':
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         mySocket.connect ( ( myHost, int(myPort)) )
-        # listenerThread(mySocket).start()
+        
     except:
         print("ERROR: could not connect to " + myHost + ":" + myPort)
         sys.exit()
 
     while True:
-        # need to pause the listener thread when the
-        # thread.start_new_thread(getInput, (mySocket,1))
-        # thread.start_new_thread(getResponse, (mySocket,1))
-
         # Show user menu and return their selection
         menu_number = user_menu()
 
