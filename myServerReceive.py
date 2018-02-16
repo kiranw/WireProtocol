@@ -27,7 +27,7 @@ def create_request(conn,netBuffer,myData,lock,address):
             return
 
         if values[0]:
-            act = values[0].decode('ascii')
+            act = values[0]
             if act in myData['accounts']:
                 general_failure(conn,'create',"Account already in use; select a different username")
                 return
@@ -71,7 +71,7 @@ def delete_request(conn,netBuffer,myData,lock,address):
 # A user will submit a username
 # On success, the user will be logged in (login_success, \x31)
 # on failure, the user will remain logged out (general_failure, \x32)
-# 
+#
 # Arguments sent to server:
 # act - account name
 def login_request(conn,netBuffer,myData,lock,address):
@@ -79,7 +79,7 @@ def login_request(conn,netBuffer,myData,lock,address):
     lock.acquire()
     try:
         if values[0]:
-            act = values[0].decode('ascii')
+            act = values[0]
 
             # See if this user is logged in already
             if address in myData['active_accounts']:
@@ -132,19 +132,16 @@ def logout_request(conn,netBuffer,myData,lock,address):
 # On success, the server receives the message from the user (send_message_success, \x51)
 # This does not mean the destination account has received the message
 # On failure, the message is not received by the server (general_failure, \x52)
-# 
+#
 # Arguments sent to server:
 # dest_act - destination account
 # msg - message content
 def send_message_request(conn,netBuffer,myData,lock,address):
-    print(netBuffer)
-    (dest_act,msg) = unpack('!100p255p',netBuffer[6:362])
-    dest_act = dest_act.decode('ascii')
-    msg = msg.decode('ascii')
+    (dest_act, msg) = unpack('!100p255p',netBuffer[6:362])
 
     lock.acquire()
 
-    # Check if the user is logged in first 
+    # Check if the user is logged in first
     if address not in myData['active_accounts']:
         general_failure(conn, 'send_message',"User must be logged in to send a message.")
         return
@@ -163,7 +160,7 @@ def send_message_request(conn,netBuffer,myData,lock,address):
             collect_messages_success(myData['connections'][address], [msg])
 
         if dest_act in myData['active_accounts'].values():
-            # That line is temporary, we should have to regenerate this each time       
+            # That line is temporary, we should have to regenerate this each time
             dest_address = dict((active_act, active_address) for active_address, active_act in myData['active_accounts'].items())[dest_act]
             # TODO send messages to active user, identify what thread that user is on (does each message get a from: field?)
             # Do threads need to poll some sort of list of pending messages to see if they should deliver?
@@ -177,7 +174,7 @@ def send_message_request(conn,netBuffer,myData,lock,address):
                 myData['messages'][dest_act] = []
             myData['messages'][dest_act].append(msg)
             send_message_success(conn, active_dest)
-        
+
     finally:
         lock.release()
         print(myData)
