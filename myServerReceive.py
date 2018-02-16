@@ -9,7 +9,9 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 
 from myServerSend import *
 from struct import unpack
-import sys
+
+import protocol
+
 
 # Create a new account
 # A valid new account must not exist
@@ -17,7 +19,6 @@ import sys
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
 def create_request(conn,netBuffer,myData,lock,address):
-    print(len(netBuffer))
     values = unpack('!100p',netBuffer[6:107])
 
     lock.acquire()
@@ -35,11 +36,10 @@ def create_request(conn,netBuffer,myData,lock,address):
         myData['accounts'].append(act)
         myData['active_accounts'][address] = act
         myData['connections'][address] = conn
-        print("Added account, " + act)
+
         create_success(conn)
     finally:
         lock.release()
-        print(myData)
     return
 
 # Delete the account that is currently logged in
@@ -47,7 +47,6 @@ def create_request(conn,netBuffer,myData,lock,address):
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn,netBuffer,myData,lock,address):
-    # values = unpack('!I',netBuffer[6:10])
 
     lock.acquire()
     try:
@@ -63,7 +62,6 @@ def delete_request(conn,netBuffer,myData,lock,address):
         delete_success(conn)
     finally:
         lock.release()
-        print(myData)
     return
 
 
