@@ -7,10 +7,10 @@ Altered Feb. 20, 2014
 Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
-from myServerSend import *
-from struct import unpack
+import datetime
 
 import protocol
+from myServerSend import *
 
 
 # Create a new account
@@ -163,8 +163,13 @@ def send_message_request(conn, args, myData, lock, address):
         # Specifies whether the target destination is currently online or not
         active_dest = dest_act in myData['active_accounts'].values()
 
+        # Append message with username and date
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        source_account = myData['active_accounts'][address]
+        msg = "{} {}: {}".format(timestamp, source_account, msg)
+
         # Sending message to self - send, and notify of success
-        if dest_act == myData['active_accounts'][address]:
+        if dest_act == source_account:
             collect_messages_success(conn, [msg])
             send_message_success(conn, active_dest)
 
