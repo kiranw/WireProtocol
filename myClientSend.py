@@ -109,6 +109,15 @@ def collect_messages_request(conn):
     send_message(protocol.make_message(protocol.CollectMessageRequest), conn)
     return
 
+# Checks if message collection is complete
+# On success,
+#   if there are no new messages, server responds confirming there are no new messages
+#   server returns with a new message if there is one    
+# On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
+def confirm_collection_complete_request(conn):
+    send_message(protocol.make_message(protocol.ConfirmCollectMessageRequest), conn)
+    return    
+
 
 # Sends a message from the client to the server using the connection provided.
 # message - A message contains the following information:
@@ -120,7 +129,6 @@ def collect_messages_request(conn):
 # On failure (if the connection is down) the client closes
 def send_message(message, conn):
     try:
-        print("Trying to send the message now")
         conn.send(message)
     except:
         # Close the client if the connection is down

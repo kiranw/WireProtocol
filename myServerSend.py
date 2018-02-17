@@ -87,6 +87,15 @@ def collect_messages_success(conn, messages):
     return
 
 
+# Check if there are any leftover messages to terminate the client from requesting for more messages
+def collect_complete_success(conn,messages):
+    if len(messages) == 0:
+        conn.send(protocol.make_message(protocol.ConfirmCollectionCompleteResponse))
+    for message_text in messages:
+        conn.send(protocol.make_message(protocol.CollectSuccessResponse, message_text))
+    return
+
+
 def end_session(conn, message):
     conn.send(protocol.make_message(protocol.EndSessionResponse, message))
     return

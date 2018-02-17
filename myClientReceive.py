@@ -69,6 +69,8 @@ def collect_messages_success(response_text):
     print("You received a message! Here: {}".format(response_text))
     return
 
+def confirm_collection_success():
+    return
 
 def no_new_messages():
     print("You have no new messages.")
@@ -116,6 +118,8 @@ response_handlers = {
     protocol.CollectFailResponse: general_failure,
     # No new messages
     protocol.CollectNoNewResponse: no_new_messages,
+    # Confirm no new messages
+    protocol.ConfirmCollectionCompleteResponse: confirm_collection_success,
 
     # Server ended session
     protocol.EndSessionResponse: end_session,

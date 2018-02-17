@@ -19,10 +19,10 @@ import protocol
 # Once an account is created, the client will be logged in
 # act - the account name provided by the user
 def create_request(conn, args, myData, lock, address):
-    print("Create request 0")
+    print("Create request waiting for lock",address)
     lock.acquire()
     try:
-        print("Create request 1")
+        print("Acquired lock - Create request")
         if address in myData['active_accounts']:
             general_failure(conn,'create',"User is currently logged in. Cannot create a new account.")
             return
@@ -39,8 +39,8 @@ def create_request(conn, args, myData, lock, address):
 
         create_success(conn)
     finally:
-        print("Create request 2")
         lock.release()
+        print("Release Lock - Create Request")
     print(myData)
     return
 
@@ -50,10 +50,10 @@ def create_request(conn, args, myData, lock, address):
 # is successful (delete_success, \x21)
 # On failure, a failure message is received (general_failure, \x22)
 def delete_request(conn, netBuffer, myData, lock, address):
-    print("Delete request 0")
+    print("Waiting for Lock - Delete request")
     lock.acquire()
     try:
-        print("Delete request 1")
+        print("Acquired Lock - Delete request")
         # Check if the current user is logged in
         if address not in myData['active_accounts']:
             general_failure(conn,'delete',"User is not logged in; Cannot delete account")
@@ -66,6 +66,7 @@ def delete_request(conn, netBuffer, myData, lock, address):
         delete_success(conn)
     finally:
         lock.release()
+        print("Released Lock - Delete")
     return
 
 
@@ -77,14 +78,13 @@ def delete_request(conn, netBuffer, myData, lock, address):
 # Arguments sent to server:
 # act - account name
 def login_request(conn, args, myData, lock, address):
-    print("Login Request 0")
+    print("Waiting for lock - Login Request")
     lock.acquire()
     try:
-        print("Login Request 1")
+        print("Acquired Lock - Login Request")
         if args[0]:
             act = args[0]
 
-            print("Login Request 2")
             # See if this user is logged in already
             if address in myData['active_accounts']:
                 general_failure(conn,'login',"User is currently logged in to an account. Cannot login.")
@@ -105,8 +105,8 @@ def login_request(conn, args, myData, lock, address):
             myData['connections'][address] = conn
             login_success(conn)
     finally:
-        print("Login Request 3")
         lock.release()
+        print("Released Lock - Login Request")
     return
 
 
@@ -115,10 +115,10 @@ def login_request(conn, args, myData, lock, address):
 # on failure, the user will remain logged in, or logged out if that was
 # their previous state (general_failure, \x42)
 def logout_request(conn, args, myData, lock, address):
-    print("Logout Request 0")
+    print("Waiting for lcok - Logout Request")
     lock.acquire()
     try:
-        print("Logout Request 1")
+        print("Acquired lock - Logout Request")
         # See if this user is not logged in to anything
         if address not in myData['active_accounts']:
             general_failure(conn, 'logout', "User is already logged out.")
@@ -129,8 +129,8 @@ def logout_request(conn, args, myData, lock, address):
         del myData['connections'][address]
         logout_success(conn)
     finally:
-        print("Logout Request 2")
         lock.release()
+        print("Released lock - Logout")
     return
 
 
@@ -145,20 +145,21 @@ def logout_request(conn, args, myData, lock, address):
 def send_message_request(conn, args, myData, lock, address):
     (dest_act, msg) = args
 
+    print("Waiting for lock - send message")
     lock.acquire()
-
-    # Check if the user is logged in first
-    if address not in myData['active_accounts']:
-        general_failure(conn, 'send_message',"User must be logged in to send a message.")
-        return
-
-    # Check if destination account is valid
-    if dest_act not in myData['accounts']:
-        general_failure(conn,'send_message',"Destination account does not exist.")
-        return
-
     # Handle the message
     try:
+        print("Acquired lock - send message")
+        # Check if the user is logged in first
+        if address not in myData['active_accounts']:
+            general_failure(conn, 'send_message',"User must be logged in to send a message.")
+            return
+
+        # Check if destination account is valid
+        if dest_act not in myData['accounts']:
+            general_failure(conn,'send_message',"Destination account does not exist.")
+            return
+
         # Specifies whether the target destination is currently online or not
         active_dest = dest_act in myData['active_accounts'].values()
 
@@ -184,6 +185,7 @@ def send_message_request(conn, args, myData, lock, address):
 
     finally:
         lock.release()
+        print("Released lock - send message")
     return
 
 
@@ -191,8 +193,10 @@ def send_message_request(conn, args, myData, lock, address):
 # On success, the user receives any messages that were previously undelivered (collect_messages_success, \x61)
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
 def collect_messages(conn, args, myData, lock, address):
+    print("Waiting for lock - collect message")
     lock.acquire()
     try:
+        print("Acquired Lock - collect message")
         if address not in myData['active_accounts']:
             general_failure(conn,'collect_messages',"Current user is not logged in to an account.")
             return
@@ -207,8 +211,31 @@ def collect_messages(conn, args, myData, lock, address):
         collect_messages_success(conn,messages)
     finally:
         lock.release()
+        print("Released lock - collect message")
     return
 
+
+def collection_complete_request(conn, args, myData, lock, address):
+    print("Waiting for lock - confirm collection complete message")
+    lock.acquire()
+    try:
+        print("Acquired Lock - confirm collection complete message")
+        if address not in myData['active_accounts']:
+            general_failure(conn,'collect_messages',"Current user is not logged in to an account.")
+            return
+
+        # Get the account name that is logged in at current address
+        act = myData['active_accounts'][address]
+        messages = []
+
+        if act in myData['messages']:
+            messages = myData['messages'][act]
+            del myData['messages'][act]
+        collect_complete_success(conn,messages)
+    finally:
+        lock.release()
+        print("Released lock - confirm collection complete message")
+    return
 
 # Which function should handle what request
 request_handlers = {
@@ -218,4 +245,5 @@ request_handlers = {
     protocol.LogoutRequest: logout_request,
     protocol.SendMessageRequest: send_message_request,
     protocol.CollectMessageRequest: collect_messages,
+    protocol.ConfirmCollectMessageRequest: collection_complete_request
 }

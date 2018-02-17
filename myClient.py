@@ -64,16 +64,30 @@ def run_submenu_selection(menu_number, mySocket):
     return True
 
 
+# The current implementation for collecting undelivered messages responds with
+# one message at a time. This method regenerates the request until there are
+# no new messages
+def handle_multiple_messages(mySocket):
+    myClientSend.confirm_collection_complete_request(mySocket)
+    getResponse(mySocket, "7", True)
+    return
+
 # Collect server response and handle using message type as specified in protocol
 # If the response receieved does not match the response expected, getResponse again
 # Makes sure client has collected all information from server until it is caught up to
 # the current operation
-def getResponse(mySocket, *args):
+# Menu number is used to check if responses correspond to requests made by the user
+# If the response does not match, another response will be collected from the server until
+# the client is caught up
+def getResponse(mySocket, menu_number, discardResponse = False):
     while True:
         try:
             # Wait until I read a message
             message_type, message_args = protocol.receive_message(mySocket)
-            print(message_type, message_args)
+
+            # Dont relay to client if the message is terminating a cascade of collected messages
+            if message_type == protocol.CollectNoNewResponse and discardResponse:
+                return
 
             # Find the handler function for that message
             response_handler = myClientReceive.response_handlers.get(message_type, None)
@@ -87,6 +101,9 @@ def getResponse(mySocket, *args):
             # If the response doesn't match the request, we should get the next response after this operation finishes
             # Make sure client is caught up to the messages on the connection
             if protocol.matchingRequestResponse(menu_number, message_type):
+                # If the client has not exhausted all messages, send another request to the server to pick up more
+                if menu_number == "6" and message_type == protocol.CollectSuccessResponse:
+                    handle_multiple_messages(mySocket)
                 return
 
         except Exception:
@@ -121,6 +138,6 @@ if __name__ == '__main__':
         run_submenu_selection(menu_number, mySocket)
 
         # Read corresponding response from server
-        getResponse(mySocket)
+        getResponse(mySocket, menu_number)
 
     mySocket.close()

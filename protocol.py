@@ -93,6 +93,10 @@ class CollectMessageRequest(AbstractMessage):
     OPCODE = b'\x60'
     PACK_FORMAT = ""
 
+class ConfirmCollectMessageRequest(AbstractMessage):
+    OPCODE = b'\x70'
+    PACK_FORMAT = ""    
+
 
 #
 # Server-to-client Responses
@@ -170,6 +174,9 @@ class CollectNoNewResponse(AbstractMessage):
     OPCODE = b'\x63'
     PACK_FORMAT = ""
 
+class ConfirmCollectionCompleteResponse(AbstractMessage):
+    OPCODE = b'\x64'
+    PACK_FORMAT = ""
 
 class EndSessionResponse(GenericSingleTextMessage):
     OPCODE = b'\x98'
@@ -188,7 +195,8 @@ REQUEST_RESPONSE_MAPPINGS = {
     "3": [LoginSuccessResponse, LoginFailResponse],
     "4": [LogoutSuccessResponse, LogoutFailResponse],
     "5": [SendSuccessResponse, SendFailResponse, SendQueuedResponse],
-    "6": [CollectSuccessResponse, CollectFailResponse, CollectNoNewResponse]
+    "6": [CollectSuccessResponse, CollectFailResponse, CollectNoNewResponse],
+    "7": [ConfirmCollectionCompleteResponse]
 }
  
 # Return True if the response type matches the behavior expected, to see if messages are caught up on client side
@@ -204,7 +212,8 @@ REQUEST_MESSAGES = [
     LoginRequest,
     LogoutRequest,
     SendMessageRequest,
-    CollectMessageRequest
+    CollectMessageRequest,
+    ConfirmCollectMessageRequest
 ]
 
 RESPONSE_MESSAGES = [
@@ -222,7 +231,9 @@ RESPONSE_MESSAGES = [
     CollectSuccessResponse,
     CollectFailResponse,
     CollectNoNewResponse,
-    UnknownMessageResponse
+    ConfirmCollectionCompleteResponse,
+    UnknownMessageResponse,
+    EndSessionResponse
 ]
 
 MESSAGES = REQUEST_MESSAGES + RESPONSE_MESSAGES
