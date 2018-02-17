@@ -8,7 +8,6 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 import socket
-from struct import unpack
 import sys
 import _thread as thread
 
@@ -26,7 +25,7 @@ CONNECTED TO MESSAGE SERVER - type the number of a function:
     (3) Login to Account
     (4) Logout
     (5) Send a Message
-    (6) Collect Undelivered Messages
+    (6) Check for Messages
     ''')
     return input('>> ')
 
@@ -125,7 +124,7 @@ if __name__ == '__main__':
     mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         mySocket.connect ( ( myHost, int(myPort)) )
-        
+
     except:
         print("ERROR: could not connect to " + myHost + ":" + myPort)
         sys.exit()
