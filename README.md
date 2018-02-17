@@ -31,14 +31,11 @@ messaging back and forth.
 
 ## Code Structure
 
+- protocol.py: Handle encoding and parsing of messages between the client and server
+- message.py: Encode and decode parts of messages, generate headers
 - myServer.py: Main server logic
 - myClient.py: Main client logic
 - myServerSend.py: Send functions for every message type for the server
 - myClientSend.py: Send functions for every message type for the client
 - myServerReceive.py: Handling routines for every message type for the server
 - myClientReceive.py: Handling routines for every message type for the server
-
-## TODOs
-
-- Add second thread to client to poll for messages?
-- Add message for "user offline, message stored"
