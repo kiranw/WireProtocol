@@ -82,6 +82,8 @@ reduce redundant code.
 
 ## Technical Decisions
 
+- We maintain an explicit mapping of request opcodes to expected response
+  opcodes to better handle out of order messages.
 - The server maintains state for each connected client (by socket), including
   the currently logged in user on that socket. Server state is maintained
   consistent with a lock around any data structure that modifies the state
@@ -91,3 +93,8 @@ reduce redundant code.
 - Messages to non logged in users are kept on the server in each user's own
   queue.
 - Account names can only be alphanumeric and less than 100 characters.
+- Fetching undelivered messages is accomplished by the server responding to the
+  fetch request with multiple messages to the client, as if they had just been
+  sent.
+- Deleted users get their persistent server state (including messages) removed.
+  Users can only delete themselves and only when online.
