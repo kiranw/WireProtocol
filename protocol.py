@@ -210,8 +210,8 @@ REQUEST_RESPONSE_MAPPINGS = {
     "4": [LogoutSuccessResponse, LogoutFailResponse],
     "5": [SendSuccessResponse, SendFailResponse, SendQueuedResponse],
     "6": [CollectSuccessResponse, CollectFailResponse, CollectNoNewResponse],
-    "7": [ConfirmCollectionCompleteResponse],
-    "8": [ListUsersRequest, ListUsersResponse]
+    "7": [ListUsersRequest, ListUsersResponse],
+    "8": [ConfirmCollectionCompleteResponse],
 }
 
 # Return True if the response type matches the behavior expected, to see if messages are caught up on client side

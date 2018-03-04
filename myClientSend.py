@@ -77,7 +77,7 @@ def logout_request(conn):
 
 # Request
 def list_users_request(conn):
-    printGreen("Search users by wildcard (all by default):")
+    printGreen("Search users by wildcard (empty string searches for '*'):")
     printGreen("Wildcards: * for any number of characters and ? for one:")
 
     wildcard = input()

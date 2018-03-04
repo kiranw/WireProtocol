@@ -73,7 +73,7 @@ def run_submenu_selection(menu_number, mySocket):
 # no new messages
 def handle_multiple_messages(mySocket):
     myClientSend.confirm_collection_complete_request(mySocket)
-    getResponse(mySocket, "7", True)
+    getResponse(mySocket, "8", True)
     return
 
 # Collect server response and handle using message type as specified in protocol
