@@ -23,17 +23,17 @@ def create_request(conn):
     maxLength = 100
 
     printGreen("CREATING AN ACCOUNT")
-    printGreen("Enter a username less than 100 characters:")
+    printGreen("Enter an alphanumeric username less than 100 characters:")
 
     account_name = ""
     while True:
         account_name = input()
 
-        if(len(account_name) < maxLength):
+        if(len(account_name) < maxLength and account_name.isalnum()):
             send_message(protocol.make_message(protocol.CreateRequest, account_name), conn)
             return
         else:
-            printRed("Exceeded length of username, must be less than 100 characters")
+            printRed("Username must be alphanumeric and less than 100 characters")
 
 
 # Delete the account that is currently logged in
@@ -75,6 +75,20 @@ def logout_request(conn):
     send_message(protocol.make_message(protocol.LogoutRequest), conn)
     return
 
+# Request
+def list_users_request(conn):
+    printGreen("Search users by wildcard (all by default):")
+    printGreen("Wildcards: * for any number of characters and ? for one:")
+
+    wildcard = input()
+
+    if wildcard.strip() == "":
+        wildcard = "*"
+
+    send_message(protocol.make_message(protocol.ListUsersRequest, wildcard), conn)
+
+    return
+
 
 # Send a message to an existing account
 # On success, the server receives the message from the user (send_message_success, \x51)
@@ -112,11 +126,11 @@ def collect_messages_request(conn):
 # Checks if message collection is complete
 # On success,
 #   if there are no new messages, server responds confirming there are no new messages
-#   server returns with a new message if there is one    
+#   server returns with a new message if there is one
 # On failure, the user does not receive undelievered messages, if they exist (general_failure, \x62)
 def confirm_collection_complete_request(conn):
     send_message(protocol.make_message(protocol.ConfirmCollectMessageRequest), conn)
-    return    
+    return
 
 
 # Sends a message from the client to the server using the connection provided.

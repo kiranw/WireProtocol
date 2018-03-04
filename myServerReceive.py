@@ -8,6 +8,7 @@ Adapted by Mali and Kiran for Assignment 1, CS262
 '''
 
 import datetime
+import fnmatch
 
 import protocol
 from myServerSend import *
@@ -242,6 +243,22 @@ def collection_complete_request(conn, args, myData, lock, address):
         print("Released lock - confirm collection complete message")
     return
 
+
+def list_users_request(conn, args, myData, lock, address):
+    """Receive a wildcard and use it to return matching users. Wildcard can
+    contain * or ? to specify many or one missing characters in a string."""
+
+    (wildcard,) = args
+
+    return_users = []
+    for user in myData["accounts"]:
+        if fnmatch.fnmatch(user, wildcard):
+            return_users.append(user)
+
+    list_users_response(conn, return_users)
+
+    return
+
 # Which function should handle what request
 request_handlers = {
     protocol.CreateRequest: create_request,
@@ -249,6 +266,7 @@ request_handlers = {
     protocol.LoginRequest: login_request,
     protocol.LogoutRequest: logout_request,
     protocol.SendMessageRequest: send_message_request,
+    protocol.ListUsersRequest: list_users_request,
     protocol.CollectMessageRequest: collect_messages,
     protocol.ConfirmCollectMessageRequest: collection_complete_request
 }

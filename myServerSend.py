@@ -95,6 +95,10 @@ def collect_complete_success(conn,messages):
         conn.send(protocol.make_message(protocol.CollectSuccessResponse, message_text))
     return
 
+# Send list of users separated by semicolons
+def list_users_response(conn, users):
+    conn.send(protocol.make_message(protocol.ListUsersResponse, ";".join(users)))
+
 
 def end_session(conn, message):
     conn.send(protocol.make_message(protocol.EndSessionResponse, message))

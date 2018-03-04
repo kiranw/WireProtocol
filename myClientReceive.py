@@ -77,6 +77,20 @@ def no_new_messages():
     return
 
 
+def handle_list_users(user_list):
+    user_list = user_list.split(";")
+
+    if len(user_list) == 0:
+        print("No matching users found.")
+        return
+
+    print("Matching users:")
+    for user in user_list:
+        print(user)
+
+    return
+
+
 # Handle invalid opcodes received from the server.
 def unknown_opcode():
     print("ERROR: Invalid opcode received from server.")
@@ -120,6 +134,8 @@ response_handlers = {
     protocol.CollectNoNewResponse: no_new_messages,
     # Confirm no new messages
     protocol.ConfirmCollectionCompleteResponse: confirm_collection_success,
+    # User list based on wildcard
+    protocol.ListUsersResponse: handle_list_users,
 
     # Server ended session
     protocol.EndSessionResponse: end_session,

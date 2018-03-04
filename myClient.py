@@ -26,6 +26,7 @@ CONNECTED TO MESSAGE SERVER - type the number of a function:
     (4) Logout
     (5) Send a Message
     (6) Check for Messages
+    (7) List users
     ''')
     return input('>> ')
 
@@ -55,6 +56,10 @@ def run_submenu_selection(menu_number, mySocket):
     #collect undelivered messages
     elif menu_number == str(6):
         myClientSend.collect_messages_request(mySocket)
+
+    #list users
+    elif menu_number == str(7):
+        myClientSend.list_users_request(mySocket)
 
     else:
         print("ERROR: Invalid menu option {}".format(menu_number))

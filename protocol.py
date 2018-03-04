@@ -9,8 +9,9 @@ from message import AbstractMessage, make_message
 
 
 class GenericSingleTextMessage(AbstractMessage):
-    """Generic message type that handles string_length +
-    arbitrary_length_string type messages"""
+    """Generic message type that handles messages that have one big string
+    argument, structured as string_length[int] + arbitrary_length_string[char]
+    """
 
     @classmethod
     def _encode(cls, text):
@@ -93,10 +94,16 @@ class CollectMessageRequest(AbstractMessage):
     OPCODE = b'\x60'
     PACK_FORMAT = ""
 
+
 class ConfirmCollectMessageRequest(AbstractMessage):
     OPCODE = b'\x70'
-    PACK_FORMAT = ""    
+    PACK_FORMAT = ""
 
+
+class ListUsersRequest(GenericSingleTextMessage):
+    """Request to list users, which includes a wildcard string."""
+    OPCODE = b'\x80'
+    PACK_FORMAT = ""
 
 #
 # Server-to-client Responses
@@ -178,6 +185,13 @@ class ConfirmCollectionCompleteResponse(AbstractMessage):
     OPCODE = b'\x64'
     PACK_FORMAT = ""
 
+
+class ListUsersResponse(GenericSingleTextMessage):
+    """List of users as one big string, separated by semicolons."""
+    OPCODE = b'\x81'
+    PACK_FORMAT = ""
+
+
 class EndSessionResponse(GenericSingleTextMessage):
     OPCODE = b'\x98'
     PACK_FORMAT = ""
@@ -196,9 +210,10 @@ REQUEST_RESPONSE_MAPPINGS = {
     "4": [LogoutSuccessResponse, LogoutFailResponse],
     "5": [SendSuccessResponse, SendFailResponse, SendQueuedResponse],
     "6": [CollectSuccessResponse, CollectFailResponse, CollectNoNewResponse],
-    "7": [ConfirmCollectionCompleteResponse]
+    "7": [ConfirmCollectionCompleteResponse],
+    "8": [ListUsersRequest, ListUsersResponse]
 }
- 
+
 # Return True if the response type matches the behavior expected, to see if messages are caught up on client side
 def matchingRequestResponse(menu_number, message_type):
     return message_type in REQUEST_RESPONSE_MAPPINGS[menu_number]
@@ -212,6 +227,7 @@ REQUEST_MESSAGES = [
     LoginRequest,
     LogoutRequest,
     SendMessageRequest,
+    ListUsersRequest,
     CollectMessageRequest,
     ConfirmCollectMessageRequest
 ]
@@ -228,6 +244,7 @@ RESPONSE_MESSAGES = [
     SendSuccessResponse,
     SendFailResponse,
     SendQueuedResponse,
+    ListUsersResponse,
     CollectSuccessResponse,
     CollectFailResponse,
     CollectNoNewResponse,
