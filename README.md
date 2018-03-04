@@ -90,3 +90,4 @@ reduce redundant code.
   messages are read and printed every time the client performs any operation.
 - Messages to non logged in users are kept on the server in each user's own
   queue.
+- Account names can only be alphanumeric and less than 100 characters.
